@@ -41,6 +41,12 @@ CornerPinDistortNode::CornerPinDistortNode()
   AddInput(kTopRightInput, NodeValue::kVec2, QVector2D(0.0, 0.0));
   AddInput(kBottomRightInput, NodeValue::kVec2, QVector2D(0.0, 0.0));
   AddInput(kBottomLeftInput, NodeValue::kVec2, QVector2D(0.0, 0.0));
+
+  // Initiate gizmos
+  gizmo_whole_rect_ = new PolygonGizmo(this);
+  for (int i=0; i<kGizmoCornerCount; i++) {
+    gizmo_resize_handle_[i] = new PointGizmo(this);
+  }
 }
 
 void CornerPinDistortNode::Retranslate()
@@ -126,13 +132,9 @@ QPointF CornerPinDistortNode::ValueToPixel(int value, const NodeValueRow& row, c
   }
 }
 
-void CornerPinDistortNode::DrawGizmos(const NodeValueRow &row, const NodeGlobals &globals, QPainter *p)
+void CornerPinDistortNode::UpdateGizmoPositions(const NodeValueRow &row, const NodeGlobals &globals)
 {
   const QVector2D &resolution = globals.resolution();
-
-  const double handle_radius = GetGizmoHandleRadius(p->transform());
-
-  p->setPen(QPen(Qt::white, 0));
 
   QPointF top_left = ValueToPixel(0, row, resolution);
   QPointF top_right = ValueToPixel(1, row, resolution);
@@ -146,21 +148,16 @@ void CornerPinDistortNode::DrawGizmos(const NodeValueRow &row, const NodeGlobals
   SetInputProperty(kBottomLeftInput, QStringLiteral("offset"), QVector2D(0.0, resolution.y()));
 
   // Draw bounding box
-  p->drawLine(QLineF(top_left, top_right));
-  p->drawLine(QLineF(top_right, bottom_right));
-  p->drawLine(QLineF(bottom_right, bottom_left));
-  p->drawLine(QLineF(bottom_left, top_left));
+  gizmo_whole_rect_->SetPolygon(QPolygonF({top_left, top_right, bottom_right, bottom_left}));
 
   // Create handles
-  gizmo_resize_handle_[0] = CreateGizmoHandleRect(top_left, handle_radius);
-  gizmo_resize_handle_[1] = CreateGizmoHandleRect(top_right, handle_radius);
-  gizmo_resize_handle_[2] = CreateGizmoHandleRect(bottom_right, handle_radius);
-  gizmo_resize_handle_[3] = CreateGizmoHandleRect(bottom_left, handle_radius);
-
-  // Draw handles
-  DrawAndExpandGizmoHandles(p, handle_radius, gizmo_resize_handle_, kGizmoCornerCount);
+  gizmo_resize_handle_[0]->SetPoint(top_left);
+  gizmo_resize_handle_[1]->SetPoint(top_right);
+  gizmo_resize_handle_[2]->SetPoint(bottom_right);
+  gizmo_resize_handle_[3]->SetPoint(bottom_left);
 }
 
+/*
 bool CornerPinDistortNode::GizmoPress(const NodeValueRow &row, const NodeGlobals &globals, const QPointF &p)
 {
   bool gizmo_active[kGizmoCornerCount] = {false};
@@ -212,5 +209,6 @@ void CornerPinDistortNode::GizmoRelease(MultiUndoCommand *command) {
   }
   gizmo_dragger_.clear();
 }
+*/
 
 }
