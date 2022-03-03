@@ -35,6 +35,7 @@
 #include "common/rational.h"
 #include "common/timerange.h"
 #include "common/xmlutils.h"
+#include "node/gizmo/gizmo.h"
 #include "node/globals.h"
 #include "node/keyframe.h"
 #include "node/inputimmediate.h"
@@ -840,13 +841,17 @@ public:
    */
   virtual void Value(const NodeValueRow& value, const NodeGlobals &globals, NodeValueTable *table) const;
 
-  virtual bool HasGizmos() const;
+  bool HasGizmos() const
+  {
+    return !gizmos_.isEmpty();
+  }
 
-  virtual void DrawGizmos(const NodeValueRow& row, const NodeGlobals &globals, QPainter* p);
+  const QVector<NodeGizmo*> &GetGizmos() const
+  {
+    return gizmos_;
+  }
 
-  virtual bool GizmoPress(const NodeValueRow& row, const NodeGlobals &globals, const QPointF& p);
-  virtual void GizmoMove(const QPointF& p, const rational &time, const Qt::KeyboardModifiers &modifiers);
-  virtual void GizmoRelease(MultiUndoCommand *command);
+  virtual void UpdateGizmoPositions(const NodeValueRow &row, const NodeGlobals &globals){}
 
   const QString& GetLabel() const;
   void SetLabel(const QString& s);
@@ -1007,12 +1012,6 @@ protected:
     kGizmoScaleCenterRight,
     kGizmoScaleCount,
   };
-
-  static QRectF CreateGizmoHandleRect(const QPointF& pt, int radius);
-
-  static double GetGizmoHandleRadius(const QTransform& transform);
-
-  static void DrawAndExpandGizmoHandles(QPainter* p, int handle_radius, QRectF* rects, int count);
 
   virtual void LinkChangeEvent(){}
 
@@ -1314,6 +1313,8 @@ private:
   QUuid uuid_;
 
   uint64_t flags_;
+
+  QVector<NodeGizmo*> gizmos_;
 
 private slots:
   /**

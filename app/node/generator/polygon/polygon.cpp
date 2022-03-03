@@ -54,6 +54,9 @@ PolygonGenerator::PolygonGenerator()
   SetSplitStandardValueOnTrack(kPointsInput, 1, kBottomY, 3);
   SetSplitStandardValueOnTrack(kPointsInput, 0, -kMiddleX, 4);
   SetSplitStandardValueOnTrack(kPointsInput, 1, -kMiddleY, 4);
+
+  // Initiate gizmos
+  poly_gizmo_ = new PathGizmo(this);
 }
 
 Node *PolygonGenerator::copy() const
@@ -149,58 +152,59 @@ void PolygonGenerator::GenerateFrame(FramePtr frame, const GenerateJob &job) con
   }
 }
 
-bool PolygonGenerator::HasGizmos() const
+template<typename T>
+void PolygonGenerator::ValidateGizmoVectorSize(QVector<T*> &vec, int new_sz)
 {
-  return true;
+  int old_sz = vec.size();
+
+  if (old_sz != new_sz) {
+    if (old_sz > new_sz) {
+      for (int i=new_sz; i<old_sz; i++) {
+        delete vec.at(i);
+      }
+    }
+
+    vec.resize(new_sz);
+
+    if (old_sz < new_sz) {
+      for (int i=old_sz; i<new_sz; i++) {
+        vec[i] = new T(this);
+      }
+    }
+  }
 }
 
-void PolygonGenerator::DrawGizmos(const NodeValueRow &row, const NodeGlobals &globals, QPainter *p)
+void PolygonGenerator::UpdateGizmoPositions(const NodeValueRow &row, const NodeGlobals &globals)
 {
-  const double handle_radius = GetGizmoHandleRadius(p->transform());
-  const double bezier_radius = handle_radius/2;
-
-  p->setPen(Qt::white);
-  p->setBrush(Qt::white);
-  p->translate(globals.resolution_by_par().x()/2, globals.resolution_by_par().y()/2);
+  QPointF half_res(globals.resolution_by_par().x()/2, globals.resolution_by_par().y()/2);
 
   QVector<NodeValue> points = row[kPointsInput].data().value< QVector<NodeValue> >();
 
-  gizmo_position_handles_.resize(points.size());
-  gizmo_bezier_handles_.resize(points.size() * 2);
-
-  p->setPen(QPen(Qt::white, 0));
-  p->setBrush(Qt::NoBrush);
+  ValidateGizmoVectorSize(gizmo_position_handles_, points.size());
+  ValidateGizmoVectorSize(gizmo_bezier_handles_, points.size() * 2);
+  ValidateGizmoVectorSize(gizmo_bezier_lines_, points.size() * 2);
 
   if (!points.isEmpty()) {
-    QVector<QLineF> lines(points.size() * 2);
-
     for (int i=0; i<points.size(); i++) {
       const Bezier &pt = points.at(i).data().value<Bezier>();
 
-      QPointF main = pt.ToPointF();
+      QPointF main = pt.ToPointF() + half_res;
       QPointF cp1 = main + pt.ControlPoint1ToPointF();
       QPointF cp2 = main + pt.ControlPoint2ToPointF();
 
-      gizmo_position_handles_[i] = CreateGizmoHandleRect(main, handle_radius);
+      gizmo_position_handles_[i]->SetPoint(main);
 
-      gizmo_bezier_handles_[i*2] = CreateGizmoHandleRect(cp1, bezier_radius);
-      lines[i*2] = QLineF(main, cp1);
-
-      gizmo_bezier_handles_[i*2+1] = CreateGizmoHandleRect(cp2, bezier_radius);
-      lines[i*2+1] = QLineF(main, cp2);
+      gizmo_bezier_handles_[i*2]->SetPoint(cp1);
+      gizmo_bezier_lines_[i*2]->SetLine(QLineF(main, cp1));
+      gizmo_bezier_handles_[i*2+1]->SetPoint(cp2);
+      gizmo_bezier_lines_[i*2+1]->SetLine(QLineF(main, cp2));
     }
-
-    p->drawLines(lines);
   }
 
-  gizmo_polygon_path_ = GeneratePath(points);
-  p->drawPath(gizmo_polygon_path_);
-
-  DrawAndExpandGizmoHandles(p, handle_radius, gizmo_position_handles_.data(), gizmo_position_handles_.size());
-  DrawAndExpandGizmoHandles(p, handle_radius, gizmo_bezier_handles_.data(), gizmo_bezier_handles_.size());
+  poly_gizmo_->SetPath(GeneratePath(points).translated(half_res));
 }
 
-bool PolygonGenerator::GizmoPress(const NodeValueRow& row, const NodeGlobals &globals, const QPointF &p)
+/*bool PolygonGenerator::GizmoPress(const NodeValueRow& row, const NodeGlobals &globals, const QPointF &p)
 {
   QPointF adjusted = p - (globals.resolution_by_par() / 2).toPointF();
 
@@ -282,7 +286,7 @@ void PolygonGenerator::GizmoRelease(MultiUndoCommand *command)
 
   gizmo_x_active_.clear();
   gizmo_y_active_.clear();
-}
+}*/
 
 void PolygonGenerator::AddPointToPath(QPainterPath *path, const Bezier &before, const Bezier &after)
 {

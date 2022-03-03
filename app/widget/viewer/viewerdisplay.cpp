@@ -33,6 +33,9 @@
 #include "common/functiontimer.h"
 #include "config/config.h"
 #include "core.h"
+#include "node/gizmo/path.h"
+#include "node/gizmo/point.h"
+#include "node/gizmo/polygon.h"
 #include "node/traverser.h"
 
 namespace olive {
@@ -44,7 +47,7 @@ ViewerDisplayWidget::ViewerDisplayWidget(QWidget *parent) :
   deinterlace_texture_(nullptr),
   signal_cursor_color_(false),
   gizmos_(nullptr),
-  gizmo_click_(false),
+  current_gizmo_(nullptr),
   hand_dragging_(false),
   deinterlace_(false),
   show_fps_(false),
@@ -204,10 +207,10 @@ void ViewerDisplayWidget::IncrementSkippedFrames()
 void ViewerDisplayWidget::mousePressEvent(QMouseEvent *event)
 {
   if (event->button() == Qt::LeftButton && gizmos_
-      && gizmos_->GizmoPress(gizmo_db_, NodeTraverser::GenerateGlobals(gizmo_params_, GenerateGizmoTime()), TransformViewerSpaceToBufferSpace(event->pos()))) {
+      && (current_gizmo_ = TryGizmoPress(gizmo_db_, NodeTraverser::GenerateGlobals(gizmo_params_, GenerateGizmoTime()), TransformViewerSpaceToBufferSpace(event->pos())))) {
 
     // Handle gizmo click
-    gizmo_click_ = true;
+    qDebug() << "clicked" << current_gizmo_;
     gizmo_drag_time_ = GetGizmoTime();
     gizmo_start_drag_ = event->pos();
 
@@ -242,14 +245,15 @@ void ViewerDisplayWidget::mouseMoveEvent(QMouseEvent *event)
 
     hand_last_drag_pos_ = event->pos();
 
-  } else if (gizmo_click_) {
+  } else if (current_gizmo_) {
 
     // Signal movement
-    gizmos_->GizmoMove(TransformViewerSpaceToBufferSpace(event->pos()),
-                       gizmo_drag_time_,
-                       event->modifiers());
+    /*gizmos_->GizmoMove(TransformViewerSpaceToBufferSpace(event->pos()),
+                 gizmo_drag_time_,
+                 event->modifiers());
     gizmo_start_drag_ = event->pos();
-    update();
+    update();*/
+    qDebug() << "GIZMO MOVE STUB";
 
   } else {
 
@@ -268,13 +272,14 @@ void ViewerDisplayWidget::mouseReleaseEvent(QMouseEvent *event)
     hand_dragging_ = false;
     UpdateCursor();
 
-  } else if (gizmo_click_) {
+  } else if (current_gizmo_) {
 
     // Handle gizmo
-    MultiUndoCommand *command = new MultiUndoCommand();
-    gizmos_->GizmoRelease(command);
+    /*MultiUndoCommand *command = new MultiUndoCommand();
+    current_gizmo_->GizmoRelease(command);
     Core::instance()->undo_stack()->pushIfHasChildren(command);
-    gizmo_click_ = false;
+    current_gizmo_ = nullptr;*/
+    qDebug() << "GIZMO RELEASE STUB";
 
   } else {
 
@@ -396,7 +401,11 @@ void ViewerDisplayWidget::OnPaint()
 
     QPainter p(inner_widget());
     p.setWorldTransform(GenerateGizmoTransform());
-    gizmos_->DrawGizmos(gizmo_db_, NodeTraverser::GenerateGlobals(gizmo_params_, range), &p);
+
+    gizmos_->UpdateGizmoPositions(gizmo_db_, NodeTraverser::GenerateGlobals(gizmo_params_, range));
+    foreach (NodeGizmo *gizmo, gizmos_->GetGizmos()) {
+      gizmo->Draw(&p);
+    }
   }
 
   // Draw action/title safe areas
@@ -561,6 +570,27 @@ QTransform ViewerDisplayWidget::GenerateGizmoTransform()
   gizmo_transform.scale(viewer_scale.x(), viewer_scale.y());
   gizmo_transform.scale(gizmo_params_.pixel_aspect_ratio().flipped().toDouble(), 1);
   return gizmo_transform;
+}
+
+NodeGizmo *ViewerDisplayWidget::TryGizmoPress(const NodeValueRow &row, const NodeGlobals &globals, const QPointF &p)
+{
+  foreach (NodeGizmo *gizmo, gizmos_->GetGizmos()) {
+    if (PointGizmo *point = dynamic_cast<PointGizmo*>(gizmo)) {
+      if (point->GetClickingRect().contains(p)) {
+        return point;
+      }
+    } else if (PolygonGizmo *poly = dynamic_cast<PolygonGizmo*>(gizmo)) {
+      if (poly->GetPolygon().contains(p)) {
+        return poly;
+      }
+    } else if (PathGizmo *path = dynamic_cast<PathGizmo*>(gizmo)) {
+      if (path->GetPath().contains(p)) {
+        return path;
+      }
+    }
+  }
+
+  return nullptr;
 }
 
 void ViewerDisplayWidget::EmitColorAtCursor(QMouseEvent *e)

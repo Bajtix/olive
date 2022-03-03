@@ -61,6 +61,7 @@ set(OLIVE_SOURCES
   common/timerange.cpp
   common/timerange.h
   common/tohex.h
+  common/util.h
   common/xmlutils.cpp
   common/xmlutils.h
   PARENT_SCOPE

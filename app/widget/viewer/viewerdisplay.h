@@ -255,6 +255,8 @@ private:
     return TimeRange(node_time, node_time + gizmo_params_.frame_rate_as_time_base());
   }
 
+  NodeGizmo *TryGizmoPress(const NodeValueRow &row, const NodeGlobals &globals, const QPointF &p);
+
   /**
    * @brief Internal reference to the OpenGL texture to draw. Set in SetTexture() and used in paintGL().
    */
@@ -305,7 +307,7 @@ private:
   rational gizmo_drag_time_;
   VideoParams gizmo_params_;
   QPoint gizmo_start_drag_;
-  bool gizmo_click_;
+  NodeGizmo *current_gizmo_;
 
   rational time_;
 

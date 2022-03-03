@@ -22,6 +22,8 @@
 #define TRANSFORMDISTORTNODE_H
 
 #include "node/generator/matrix/matrix.h"
+#include "node/gizmo/point.h"
+#include "node/gizmo/polygon.h"
 
 namespace olive {
 
@@ -69,17 +71,6 @@ public:
 
   virtual ShaderCode GetShaderCode(const QString& shader_id) const override;
 
-  virtual bool HasGizmos() const override
-  {
-    return true;
-  }
-
-  virtual void DrawGizmos(const NodeValueRow &row, const NodeGlobals &globals, QPainter *p) override;
-
-  virtual bool GizmoPress(const NodeValueRow &row, const NodeGlobals &globals, const QPointF &p) override;
-  virtual void GizmoMove(const QPointF &p, const rational &time, const Qt::KeyboardModifiers &modifiers) override;
-  virtual void GizmoRelease(MultiUndoCommand *command) override;
-
   enum AutoScaleType {
     kAutoScaleNone,
     kAutoScaleFit,
@@ -91,6 +82,8 @@ public:
                                               const QVector2D& sequence_res,
                                               const QVector2D& texture_res,
                                               AutoScaleType autoscale_type = kAutoScaleNone);
+
+  virtual void UpdateGizmoPositions(const NodeValueRow &row, const NodeGlobals &globals) override;
 
   static const QString kTextureInput;
   static const QString kAutoscaleInput;
@@ -123,9 +116,9 @@ private:
   QVector2D gizmo_scale_anchor_;
 
   // Gizmo on screen object storage
-  QPolygonF gizmo_rect_;
-  QRectF gizmo_anchor_pt_;
-  QRectF gizmo_resize_handle_[kGizmoScaleCount];
+  PointGizmo *point_gizmo_[kGizmoScaleCount];
+  PointGizmo *anchor_gizmo_;
+  PolygonGizmo *poly_gizmo_;
 
 };
 

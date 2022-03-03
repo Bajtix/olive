@@ -41,6 +41,17 @@ TransformDistortNode::TransformDistortNode()
   AddInput(kInterpolationInput, NodeValue::kCombo, 2);
 
   PrependInput(kTextureInput, NodeValue::kTexture, InputFlags(kInputFlagNotKeyframable));
+
+  point_gizmo_[kGizmoScaleTopLeft] = new PointGizmo(this);
+  point_gizmo_[kGizmoScaleTopCenter] = new PointGizmo(this);
+  point_gizmo_[kGizmoScaleTopRight] = new PointGizmo(this);
+  point_gizmo_[kGizmoScaleBottomLeft] = new PointGizmo(this);
+  point_gizmo_[kGizmoScaleBottomCenter] = new PointGizmo(this);
+  point_gizmo_[kGizmoScaleBottomRight] = new PointGizmo(this);
+  point_gizmo_[kGizmoScaleCenterLeft] = new PointGizmo(this);
+  point_gizmo_[kGizmoScaleCenterRight] = new PointGizmo(this);
+  poly_gizmo_ = new PolygonGizmo(this);
+  anchor_gizmo_ = new PointGizmo(PointGizmo::kAnchorPoint, this);
 }
 
 void TransformDistortNode::Retranslate()
@@ -101,7 +112,7 @@ ShaderCode TransformDistortNode::GetShaderCode(const QString &shader_id) const
   return ShaderCode();
 }
 
-bool TransformDistortNode::GizmoPress(const NodeValueRow &row, const NodeGlobals &globals, const QPointF &p)
+/*bool TransformDistortNode::GizmoPress(const NodeValueRow &row, const NodeGlobals &globals, const QPointF &p)
 {
   TexturePtr tex = row[kTextureInput].data().value<TexturePtr>();
   if (!tex) {
@@ -311,7 +322,7 @@ void TransformDistortNode::GizmoRelease(MultiUndoCommand *command)
   gizmo_start_.clear();
 
   gizmo_drag_ = nullptr;
-}
+}*/
 
 void TransformDistortNode::Hash(QCryptographicHash &hash, const NodeGlobals &globals, const VideoParams &video_params) const
 {
@@ -387,32 +398,12 @@ QMatrix4x4 TransformDistortNode::AdjustMatrixByResolutions(const QMatrix4x4 &mat
   return adjusted_matrix;
 }
 
-QPointF TransformDistortNode::CreateScalePoint(double x, double y, const QPointF &half_res, const QMatrix4x4 &mat)
-{
-  return mat.map(QPointF(x, y)) + half_res;
-}
-
-QMatrix4x4 TransformDistortNode::GenerateAutoScaledMatrix(const QMatrix4x4& generated_matrix, const NodeValueRow& value, const NodeGlobals &globals, const VideoParams& texture_params) const
-{
-  const QVector2D &sequence_res = globals.resolution();
-  QVector2D texture_res(texture_params.square_pixel_width(), texture_params.height());
-  AutoScaleType autoscale = static_cast<AutoScaleType>(value[kAutoscaleInput].data().toInt());
-
-  return AdjustMatrixByResolutions(generated_matrix,
-                                   sequence_res,
-                                   texture_res,
-                                   autoscale);
-}
-
-void TransformDistortNode::DrawGizmos(const NodeValueRow &row, const NodeGlobals &globals, QPainter *p)
+void TransformDistortNode::UpdateGizmoPositions(const NodeValueRow &row, const NodeGlobals &globals)
 {
   TexturePtr tex = row[kTextureInput].data().value<TexturePtr>();
   if (!tex) {
     return;
   }
-
-  // 0 pen width is always 1px wide despite any transform
-  p->setPen(QPen(Qt::white, 0));
 
   // Get the sequence resolution
   const QVector2D &sequence_res = globals.resolution();
@@ -441,14 +432,9 @@ void TransformDistortNode::DrawGizmos(const NodeValueRow &row, const NodeGlobals
                                    QPointF(-1, 1),
                                    QPointF(-1, -1)};
   QTransform rectangle_transform = rectangle_matrix.toTransform();
-  gizmo_rect_ = rectangle_transform.map(points);
-  gizmo_rect_.translate(sequence_half_res_pt);
-
-  // Draw rectangle
-  p->drawPolyline(gizmo_rect_);
-
-  // Get handle size (relative to screen space rather than buffer space)
-  const double resize_handle_rad = GetGizmoHandleRadius(p->transform());
+  QPolygonF r = rectangle_transform.map(points);
+  r.translate(sequence_half_res_pt);
+  poly_gizmo_->SetPolygon(r);
 
   // Draw anchor point
   QMatrix4x4 anchor_matrix;
@@ -457,37 +443,39 @@ void TransformDistortNode::DrawGizmos(const NodeValueRow &row, const NodeGlobals
                                              sequence_res,
                                              tex_sz,
                                              autoscale);
-  QPointF anchor_pt = anchor_matrix.toTransform().map(QPointF(0, 0)) + sequence_half_res_pt;
-  const double anchor_pt_radius = resize_handle_rad * 2;
-
-  gizmo_anchor_pt_ = QRectF(anchor_pt.x() - anchor_pt_radius,
-                            anchor_pt.y() - anchor_pt_radius,
-                            anchor_pt_radius*2,
-                            anchor_pt_radius*2);
-
-  p->drawEllipse(anchor_pt, anchor_pt_radius, anchor_pt_radius);
-
-  p->drawLines({QLineF(anchor_pt.x() - anchor_pt_radius, anchor_pt.y(),
-                anchor_pt.x() + anchor_pt_radius, anchor_pt.y()),
-                QLineF(anchor_pt.x(), anchor_pt.y() - anchor_pt_radius,
-                anchor_pt.x(), anchor_pt.y() + anchor_pt_radius)});
+  anchor_gizmo_->SetPoint(anchor_matrix.toTransform().map(QPointF(0, 0)) + sequence_half_res_pt);
 
   // Draw scale handles
-  gizmo_resize_handle_[kGizmoScaleTopLeft]      = CreateGizmoHandleRect(CreateScalePoint(-1, -1, sequence_half_res_pt, rectangle_matrix), resize_handle_rad);
-  gizmo_resize_handle_[kGizmoScaleTopCenter]    = CreateGizmoHandleRect(CreateScalePoint( 0, -1, sequence_half_res_pt, rectangle_matrix), resize_handle_rad);
-  gizmo_resize_handle_[kGizmoScaleTopRight]     = CreateGizmoHandleRect(CreateScalePoint( 1, -1, sequence_half_res_pt, rectangle_matrix), resize_handle_rad);
-  gizmo_resize_handle_[kGizmoScaleBottomLeft]   = CreateGizmoHandleRect(CreateScalePoint(-1,  1, sequence_half_res_pt, rectangle_matrix), resize_handle_rad);
-  gizmo_resize_handle_[kGizmoScaleBottomCenter] = CreateGizmoHandleRect(CreateScalePoint( 0,  1, sequence_half_res_pt, rectangle_matrix), resize_handle_rad);
-  gizmo_resize_handle_[kGizmoScaleBottomRight]  = CreateGizmoHandleRect(CreateScalePoint( 1,  1, sequence_half_res_pt, rectangle_matrix), resize_handle_rad);
-  gizmo_resize_handle_[kGizmoScaleCenterLeft]   = CreateGizmoHandleRect(CreateScalePoint(-1,  0, sequence_half_res_pt, rectangle_matrix), resize_handle_rad);
-  gizmo_resize_handle_[kGizmoScaleCenterRight]  = CreateGizmoHandleRect(CreateScalePoint( 1,  0, sequence_half_res_pt, rectangle_matrix), resize_handle_rad);
-
-  DrawAndExpandGizmoHandles(p, resize_handle_rad, gizmo_resize_handle_, kGizmoScaleCount);
+  point_gizmo_[kGizmoScaleTopLeft]->SetPoint(CreateScalePoint(-1, -1, sequence_half_res_pt, rectangle_matrix));
+  point_gizmo_[kGizmoScaleTopCenter]->SetPoint(CreateScalePoint( 0, -1, sequence_half_res_pt, rectangle_matrix));
+  point_gizmo_[kGizmoScaleTopRight]->SetPoint(CreateScalePoint( 1, -1, sequence_half_res_pt, rectangle_matrix));
+  point_gizmo_[kGizmoScaleBottomLeft]->SetPoint(CreateScalePoint(-1,  1, sequence_half_res_pt, rectangle_matrix));
+  point_gizmo_[kGizmoScaleBottomCenter]->SetPoint(CreateScalePoint( 0,  1, sequence_half_res_pt, rectangle_matrix));
+  point_gizmo_[kGizmoScaleBottomRight]->SetPoint(CreateScalePoint( 1,  1, sequence_half_res_pt, rectangle_matrix));
+  point_gizmo_[kGizmoScaleCenterLeft]->SetPoint(CreateScalePoint(-1,  0, sequence_half_res_pt, rectangle_matrix));
+  point_gizmo_[kGizmoScaleCenterRight]->SetPoint(CreateScalePoint( 1,  0, sequence_half_res_pt, rectangle_matrix));
 
   // Use offsets to make the appearance of values that start in the top left, even though we
   // really anchor around the center
   SetInputProperty(kPositionInput, QStringLiteral("offset"), sequence_half_res);
   SetInputProperty(kAnchorInput, QStringLiteral("offset"), tex_sz * 0.5);
+}
+
+QPointF TransformDistortNode::CreateScalePoint(double x, double y, const QPointF &half_res, const QMatrix4x4 &mat)
+{
+  return mat.map(QPointF(x, y)) + half_res;
+}
+
+QMatrix4x4 TransformDistortNode::GenerateAutoScaledMatrix(const QMatrix4x4& generated_matrix, const NodeValueRow& value, const NodeGlobals &globals, const VideoParams& texture_params) const
+{
+  const QVector2D &sequence_res = globals.resolution();
+  QVector2D texture_res(texture_params.square_pixel_width(), texture_params.height());
+  AutoScaleType autoscale = static_cast<AutoScaleType>(value[kAutoscaleInput].data().toInt());
+
+  return AdjustMatrixByResolutions(generated_matrix,
+                                   sequence_res,
+                                   texture_res,
+                                   autoscale);
 }
 
 }

@@ -20,7 +20,7 @@
 
 #include "cropdistortnode.h"
 
-#include "common/lerp.h"
+#include "common/util.h"
 #include "core.h"
 #include "widget/slider/floatslider.h"
 
@@ -44,6 +44,17 @@ CropDistortNode::CropDistortNode()
 
   AddInput(kFeatherInput, NodeValue::kFloat, 0.0);
   SetInputProperty(kFeatherInput, QStringLiteral("min"), 0.0);
+
+  // Initiate gizmos
+  point_gizmo_[kGizmoScaleTopLeft] = new PointGizmo(this);
+  point_gizmo_[kGizmoScaleTopCenter] = new PointGizmo(this);
+  point_gizmo_[kGizmoScaleTopRight] = new PointGizmo(this);
+  point_gizmo_[kGizmoScaleBottomLeft] = new PointGizmo(this);
+  point_gizmo_[kGizmoScaleBottomCenter] = new PointGizmo(this);
+  point_gizmo_[kGizmoScaleBottomRight] = new PointGizmo(this);
+  point_gizmo_[kGizmoScaleCenterLeft] = new PointGizmo(this);
+  point_gizmo_[kGizmoScaleCenterRight] = new PointGizmo(this);
+  poly_gizmo_ = new PolygonGizmo(this);
 }
 
 void CropDistortNode::Retranslate()
@@ -81,37 +92,30 @@ ShaderCode CropDistortNode::GetShaderCode(const QString &shader_id) const
   return ShaderCode(FileFunctions::ReadFileAsString(QStringLiteral(":/shaders/crop.frag")));
 }
 
-void CropDistortNode::DrawGizmos(const NodeValueRow &row, const NodeGlobals &globals, QPainter *p)
+void CropDistortNode::UpdateGizmoPositions(const NodeValueRow &row, const NodeGlobals &globals)
 {
   const QVector2D &resolution = globals.resolution();
-
-  const double handle_radius = GetGizmoHandleRadius(p->transform());
-
-  p->setPen(QPen(Qt::white, 0));
 
   double left_pt = resolution.x() * row[kLeftInput].data().toDouble();
   double top_pt = resolution.y() * row[kTopInput].data().toDouble();
   double right_pt = resolution.x() * (1.0 - row[kRightInput].data().toDouble());
   double bottom_pt = resolution.y() * (1.0 - row[kBottomInput].data().toDouble());
-  double center_x_pt = lerp(left_pt, right_pt, 0.5);
-  double center_y_pt = lerp(top_pt, bottom_pt, 0.5);
+  double center_x_pt = mid(left_pt, right_pt);
+  double center_y_pt = mid(top_pt, bottom_pt);
 
-  gizmo_whole_rect_ = QRectF(left_pt, top_pt, right_pt - left_pt, bottom_pt - top_pt);
-  p->drawRect(gizmo_whole_rect_);
+  point_gizmo_[kGizmoScaleTopLeft]->SetPoint(QPointF(left_pt, top_pt));
+  point_gizmo_[kGizmoScaleTopCenter]->SetPoint(QPointF(center_x_pt, top_pt));
+  point_gizmo_[kGizmoScaleTopRight]->SetPoint(QPointF(right_pt, top_pt));
+  point_gizmo_[kGizmoScaleBottomLeft]->SetPoint(QPointF(left_pt, bottom_pt));
+  point_gizmo_[kGizmoScaleBottomCenter]->SetPoint(QPointF(center_x_pt, bottom_pt));
+  point_gizmo_[kGizmoScaleBottomRight]->SetPoint(QPointF(right_pt, bottom_pt));
+  point_gizmo_[kGizmoScaleCenterLeft]->SetPoint(QPointF(left_pt, center_y_pt));
+  point_gizmo_[kGizmoScaleCenterRight]->SetPoint(QPointF(right_pt, center_y_pt));
 
-  gizmo_resize_handle_[kGizmoScaleTopLeft] = CreateGizmoHandleRect(QPointF(left_pt, top_pt), handle_radius);
-  gizmo_resize_handle_[kGizmoScaleTopCenter] = CreateGizmoHandleRect(QPointF(center_x_pt, top_pt), handle_radius);
-  gizmo_resize_handle_[kGizmoScaleTopRight] = CreateGizmoHandleRect(QPointF(right_pt, top_pt), handle_radius);
-  gizmo_resize_handle_[kGizmoScaleBottomLeft] = CreateGizmoHandleRect(QPointF(left_pt, bottom_pt), handle_radius);
-  gizmo_resize_handle_[kGizmoScaleBottomCenter] = CreateGizmoHandleRect(QPointF(center_x_pt, bottom_pt), handle_radius);
-  gizmo_resize_handle_[kGizmoScaleBottomRight] = CreateGizmoHandleRect(QPointF(right_pt, bottom_pt), handle_radius);
-  gizmo_resize_handle_[kGizmoScaleCenterLeft] = CreateGizmoHandleRect(QPointF(left_pt, center_y_pt), handle_radius);
-  gizmo_resize_handle_[kGizmoScaleCenterRight] = CreateGizmoHandleRect(QPointF(right_pt, center_y_pt), handle_radius);
-
-  DrawAndExpandGizmoHandles(p, handle_radius, gizmo_resize_handle_, kGizmoScaleCount);
+  poly_gizmo_->SetPolygon(QRectF(left_pt, top_pt, right_pt - left_pt, bottom_pt - top_pt));
 }
 
-bool CropDistortNode::GizmoPress(const NodeValueRow &row, const NodeGlobals &globals, const QPointF &p)
+/*bool CropDistortNode::GizmoPress(const NodeValueRow &row, const NodeGlobals &globals, const QPointF &p)
 {
   bool found_handle = false;
 
@@ -239,7 +243,7 @@ void CropDistortNode::GizmoRelease(MultiUndoCommand *command)
   gizmo_dragger_.clear();
 
   gizmo_start_.clear();
-}
+}*/
 
 void CropDistortNode::CreateCropSideInput(const QString &id)
 {

@@ -1248,28 +1248,6 @@ void Node::IgnoreHashingFrom(const QString &input_id)
   ignore_when_hashing_.append(input_id);
 }
 
-bool Node::HasGizmos() const
-{
-  return false;
-}
-
-void Node::DrawGizmos(const NodeValueRow &, const NodeGlobals &, QPainter *)
-{
-}
-
-bool Node::GizmoPress(const NodeValueRow &, const NodeGlobals &, const QPointF &)
-{
-  return false;
-}
-
-void Node::GizmoMove(const QPointF &, const rational&, const Qt::KeyboardModifiers &)
-{
-}
-
-void Node::GizmoRelease(MultiUndoCommand *)
-{
-}
-
 const QString &Node::GetLabel() const
 {
   return label_;
@@ -1760,39 +1738,6 @@ void Node::ClearElement(const QString& input, int index)
   SetSplitStandardValue(input, GetSplitDefaultValue(input), index);
 }
 
-QRectF Node::CreateGizmoHandleRect(const QPointF &pt, int radius)
-{
-  return QRectF(pt.x() - radius,
-                pt.y() - radius,
-                2*radius,
-                2*radius);
-}
-
-double Node::GetGizmoHandleRadius(const QTransform &transform)
-{
-  double raw_value = QFontMetrics(qApp->font()).height() * 0.25;
-
-  raw_value /= transform.m11();
-
-  return raw_value;
-}
-
-void Node::DrawAndExpandGizmoHandles(QPainter *p, int handle_radius, QRectF *rects, int count)
-{
-  p->setPen(Qt::NoPen);
-  p->setBrush(Qt::white);
-
-  for (int i=0; i<count; i++) {
-    QRectF& r = rects[i];
-
-    // Draw rect on screen
-    p->drawRect(r);
-
-    // Extend rect so it's easier to drag with handle
-    r.adjust(-handle_radius, -handle_radius, handle_radius, handle_radius);
-  }
-}
-
 void Node::InputValueChangedEvent(const QString &input, int element)
 {
   Q_UNUSED(input)
@@ -1827,9 +1772,7 @@ void Node::childEvent(QChildEvent *event)
 {
   super::childEvent(event);
 
-  NodeKeyframe* key = dynamic_cast<NodeKeyframe*>(event->child());
-
-  if (key) {
+  if (NodeKeyframe* key = dynamic_cast<NodeKeyframe*>(event->child())) {
     NodeInput i(this, key->input(), key->element());
 
     if (event->type() == QEvent::ChildAdded) {
@@ -1856,6 +1799,12 @@ void Node::childEvent(QChildEvent *event)
 
       GetImmediate(key->input(), key->element())->remove_keyframe(key);
       ParameterValueChanged(i, time_affected);
+    }
+  } else if (NodeGizmo *gizmo = dynamic_cast<NodeGizmo*>(event->child())) {
+    if (event->type() == QEvent::ChildAdded) {
+      gizmos_.append(gizmo);
+    } else if (event->type() == QEvent::ChildRemoved) {
+      gizmos_.removeOne(gizmo);
     }
   }
 }
