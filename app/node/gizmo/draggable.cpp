@@ -18,21 +18,35 @@
 
 ***/
 
-#include "polygon.h"
+#include "draggable.h"
 
 namespace olive {
 
-PolygonGizmo::PolygonGizmo(QObject *parent)
-  : DraggableGizmo{parent}
+DraggableGizmo::DraggableGizmo(QObject *parent)
+  : NodeGizmo{parent},
+    drag_value_behavior_(kAbsolute)
 {
 }
 
-void PolygonGizmo::Draw(QPainter *p) const
+void DraggableGizmo::DragStart(const rational &time)
 {
-  p->setPen(QPen(Qt::white, 0));
-  p->setBrush(Qt::NoBrush);
+  qDebug() << this << "Starting";
+  for (int i=0; i<draggers_.size(); i++) {
+    draggers_[i].Start(inputs_[i], time);
+  }
+}
 
-  p->drawPolyline(polygon_);
+void DraggableGizmo::DragMove(double x, double y, const Qt::KeyboardModifiers &modifiers)
+{
+  emit HandleMovement(x, y, modifiers);
+}
+
+void DraggableGizmo::DragEnd(MultiUndoCommand *command)
+{
+  qDebug() << this << "Ending";
+  for (int i=0; i<draggers_.size(); i++) {
+    draggers_[i].End(command);
+  }
 }
 
 }

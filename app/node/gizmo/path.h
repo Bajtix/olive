@@ -23,11 +23,11 @@
 
 #include <QPainterPath>
 
-#include "gizmo.h"
+#include "draggable.h"
 
 namespace olive {
 
-class PathGizmo : public NodeGizmo
+class PathGizmo : public DraggableGizmo
 {
   Q_OBJECT
 public:

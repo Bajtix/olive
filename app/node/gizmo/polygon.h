@@ -23,11 +23,11 @@
 
 #include <QPolygonF>
 
-#include "gizmo.h"
+#include "draggable.h"
 
 namespace olive {
 
-class PolygonGizmo : public NodeGizmo
+class PolygonGizmo : public DraggableGizmo
 {
   Q_OBJECT
 public:

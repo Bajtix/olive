@@ -16,6 +16,8 @@
 
 set(OLIVE_SOURCES
   ${OLIVE_SOURCES}
+  node/gizmo/draggable.cpp
+  node/gizmo/draggable.h
   node/gizmo/gizmo.cpp
   node/gizmo/gizmo.h
   node/gizmo/line.cpp

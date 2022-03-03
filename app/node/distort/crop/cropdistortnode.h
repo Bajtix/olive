@@ -81,6 +81,9 @@ public:
 private:
   void CreateCropSideInput(const QString& id);
 
+  template<typename T>
+  T *AddGizmo();
+
   // Gizmo variables
   PointGizmo *point_gizmo_[kGizmoScaleCount];
   PolygonGizmo *poly_gizmo_;
@@ -94,11 +97,9 @@ private:
     kGizmoAll = 0xFF
   };
 
-  int gizmo_drag_;
-  QVector<NodeInputDragger> gizmo_dragger_;
-  QVector<QVariant> gizmo_start_;
-  QPointF gizmo_drag_start_;
-  QVector2D gizmo_res_;
+private slots:
+  void GizmoDragMove(double delta_x, double delta_y, const Qt::KeyboardModifiers &modifiers);
+
 
 };
 

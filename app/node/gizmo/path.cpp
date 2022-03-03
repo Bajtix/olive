@@ -23,7 +23,7 @@
 namespace olive {
 
 PathGizmo::PathGizmo(QObject *parent) :
-  NodeGizmo{parent}
+  DraggableGizmo{parent}
 {
 
 }

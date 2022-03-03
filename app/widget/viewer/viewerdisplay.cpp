@@ -48,6 +48,7 @@ ViewerDisplayWidget::ViewerDisplayWidget(QWidget *parent) :
   signal_cursor_color_(false),
   gizmos_(nullptr),
   current_gizmo_(nullptr),
+  gizmo_drag_started_(false),
   hand_dragging_(false),
   deinterlace_(false),
   show_fps_(false),
@@ -178,7 +179,7 @@ void ViewerDisplayWidget::SetTime(const rational &time)
   }
 }
 
-QPoint ViewerDisplayWidget::TransformViewerSpaceToBufferSpace(QPoint pos)
+QPointF ViewerDisplayWidget::TransformViewerSpaceToBufferSpace(const QPoint &pos)
 {
   /*
   * Inversion will only fail if the viewer has been scaled by 0 in any direction
@@ -207,12 +208,12 @@ void ViewerDisplayWidget::IncrementSkippedFrames()
 void ViewerDisplayWidget::mousePressEvent(QMouseEvent *event)
 {
   if (event->button() == Qt::LeftButton && gizmos_
-      && (current_gizmo_ = TryGizmoPress(gizmo_db_, NodeTraverser::GenerateGlobals(gizmo_params_, GenerateGizmoTime()), TransformViewerSpaceToBufferSpace(event->pos())))) {
+      && (current_gizmo_ = TryGizmoPress(gizmo_db_, TransformViewerSpaceToBufferSpace(event->pos())))) {
 
     // Handle gizmo click
-    qDebug() << "clicked" << current_gizmo_;
-    gizmo_drag_time_ = GetGizmoTime();
     gizmo_start_drag_ = event->pos();
+    gizmo_last_drag_ = gizmo_start_drag_;
+    current_gizmo_->SetGlobals(NodeTraverser::GenerateGlobals(gizmo_params_, GenerateGizmoTime()));
 
   } else if (IsHandDrag(event)) {
 
@@ -248,12 +249,28 @@ void ViewerDisplayWidget::mouseMoveEvent(QMouseEvent *event)
   } else if (current_gizmo_) {
 
     // Signal movement
-    /*gizmos_->GizmoMove(TransformViewerSpaceToBufferSpace(event->pos()),
-                 gizmo_drag_time_,
-                 event->modifiers());
-    gizmo_start_drag_ = event->pos();
-    update();*/
-    qDebug() << "GIZMO MOVE STUB";
+    if (DraggableGizmo *draggable = dynamic_cast<DraggableGizmo*>(current_gizmo_)) {
+      if (!gizmo_drag_started_) {
+        draggable->DragStart(GetGizmoTime());
+        gizmo_drag_started_ = true;
+      }
+
+      QPointF v = TransformViewerSpaceToBufferSpace(event->pos());
+      switch (draggable->GetDragValueBehavior()) {
+      case DraggableGizmo::kAbsolute:
+        // Above value is correct
+        break;
+      case DraggableGizmo::kDeltaFromPrevious:
+        v -= TransformViewerSpaceToBufferSpace(gizmo_last_drag_);
+        gizmo_last_drag_ = event->pos();
+        break;
+      case DraggableGizmo::kDeltaFromStart:
+        v -= TransformViewerSpaceToBufferSpace(gizmo_start_drag_);
+        break;
+      }
+
+      draggable->DragMove(v.x(), v.y(), event->modifiers());
+    }
 
   } else {
 
@@ -275,11 +292,13 @@ void ViewerDisplayWidget::mouseReleaseEvent(QMouseEvent *event)
   } else if (current_gizmo_) {
 
     // Handle gizmo
-    /*MultiUndoCommand *command = new MultiUndoCommand();
-    current_gizmo_->GizmoRelease(command);
+    MultiUndoCommand *command = new MultiUndoCommand();
+    if (DraggableGizmo *draggable = dynamic_cast<DraggableGizmo*>(current_gizmo_)) {
+      draggable->DragEnd(command);
+    }
     Core::instance()->undo_stack()->pushIfHasChildren(command);
-    current_gizmo_ = nullptr;*/
-    qDebug() << "GIZMO RELEASE STUB";
+    current_gizmo_ = nullptr;
+    gizmo_drag_started_ = false;
 
   } else {
 
@@ -572,15 +591,16 @@ QTransform ViewerDisplayWidget::GenerateGizmoTransform()
   return gizmo_transform;
 }
 
-NodeGizmo *ViewerDisplayWidget::TryGizmoPress(const NodeValueRow &row, const NodeGlobals &globals, const QPointF &p)
+NodeGizmo *ViewerDisplayWidget::TryGizmoPress(const NodeValueRow &row, const QPointF &p)
 {
   foreach (NodeGizmo *gizmo, gizmos_->GetGizmos()) {
     if (PointGizmo *point = dynamic_cast<PointGizmo*>(gizmo)) {
-      if (point->GetClickingRect().contains(p)) {
+      if (point->GetClickingRect(GenerateGizmoTransform()).contains(p)) {
         return point;
       }
     } else if (PolygonGizmo *poly = dynamic_cast<PolygonGizmo*>(gizmo)) {
-      if (poly->GetPolygon().contains(p)) {
+      qDebug() << "poly:" << poly->GetPolygon() << p << poly->GetPolygon().contains(p);
+      if (poly->GetPolygon().containsPoint(p, Qt::OddEvenFill)) {
         return poly;
       }
     } else if (PathGizmo *path = dynamic_cast<PathGizmo*>(gizmo)) {

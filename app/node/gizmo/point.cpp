@@ -25,7 +25,7 @@
 namespace olive {
 
 PointGizmo::PointGizmo(const Shape &shape, bool smaller, QObject *parent) :
-  NodeGizmo{parent},
+  DraggableGizmo{parent},
   shape_(shape),
   smaller_(smaller)
 {
@@ -70,9 +70,9 @@ void PointGizmo::Draw(QPainter *p) const
   }
 }
 
-QRectF PointGizmo::GetClickingRect() const
+QRectF PointGizmo::GetClickingRect(const QTransform &t) const
 {
-  return GetDrawingRect(GetStandardRadius() * 1.5);
+  return GetDrawingRect(GetStandardRadius() / t.m11() * 1.5);
 }
 
 double PointGizmo::GetStandardRadius()

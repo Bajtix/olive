@@ -46,15 +46,39 @@ CropDistortNode::CropDistortNode()
   SetInputProperty(kFeatherInput, QStringLiteral("min"), 0.0);
 
   // Initiate gizmos
-  point_gizmo_[kGizmoScaleTopLeft] = new PointGizmo(this);
-  point_gizmo_[kGizmoScaleTopCenter] = new PointGizmo(this);
-  point_gizmo_[kGizmoScaleTopRight] = new PointGizmo(this);
-  point_gizmo_[kGizmoScaleBottomLeft] = new PointGizmo(this);
-  point_gizmo_[kGizmoScaleBottomCenter] = new PointGizmo(this);
-  point_gizmo_[kGizmoScaleBottomRight] = new PointGizmo(this);
-  point_gizmo_[kGizmoScaleCenterLeft] = new PointGizmo(this);
-  point_gizmo_[kGizmoScaleCenterRight] = new PointGizmo(this);
-  poly_gizmo_ = new PolygonGizmo(this);
+  point_gizmo_[kGizmoScaleTopLeft] = AddGizmo<PointGizmo>();
+  point_gizmo_[kGizmoScaleTopLeft]->AddInput(NodeInput(this, kLeftInput));
+  point_gizmo_[kGizmoScaleTopLeft]->AddInput(NodeInput(this, kTopInput));
+
+  point_gizmo_[kGizmoScaleTopCenter] = AddGizmo<PointGizmo>();
+  point_gizmo_[kGizmoScaleTopCenter]->AddInput(NodeInput(this, kTopInput));
+
+  point_gizmo_[kGizmoScaleTopRight] = AddGizmo<PointGizmo>();
+  point_gizmo_[kGizmoScaleTopRight]->AddInput(NodeInput(this, kRightInput));
+  point_gizmo_[kGizmoScaleTopRight]->AddInput(NodeInput(this, kTopInput));
+
+  point_gizmo_[kGizmoScaleBottomLeft] = AddGizmo<PointGizmo>();
+  point_gizmo_[kGizmoScaleBottomLeft]->AddInput(NodeInput(this, kLeftInput));
+  point_gizmo_[kGizmoScaleBottomLeft]->AddInput(NodeInput(this, kBottomInput));
+
+  point_gizmo_[kGizmoScaleBottomCenter] = AddGizmo<PointGizmo>();
+  point_gizmo_[kGizmoScaleBottomCenter]->AddInput(NodeInput(this, kBottomInput));
+
+  point_gizmo_[kGizmoScaleBottomRight] = AddGizmo<PointGizmo>();
+  point_gizmo_[kGizmoScaleBottomRight]->AddInput(NodeInput(this, kRightInput));
+  point_gizmo_[kGizmoScaleBottomRight]->AddInput(NodeInput(this, kBottomInput));
+
+  point_gizmo_[kGizmoScaleCenterLeft] = AddGizmo<PointGizmo>();
+  point_gizmo_[kGizmoScaleCenterLeft]->AddInput(NodeInput(this, kLeftInput));
+
+  point_gizmo_[kGizmoScaleCenterRight] = AddGizmo<PointGizmo>();
+  point_gizmo_[kGizmoScaleCenterRight]->AddInput(NodeInput(this, kRightInput));
+
+  poly_gizmo_ = AddGizmo<PolygonGizmo>();;
+  poly_gizmo_->AddInput(NodeInput(this, kLeftInput));
+  poly_gizmo_->AddInput(NodeInput(this, kTopInput));
+  poly_gizmo_->AddInput(NodeInput(this, kRightInput));
+  poly_gizmo_->AddInput(NodeInput(this, kBottomInput));
 }
 
 void CropDistortNode::Retranslate()
@@ -115,135 +139,28 @@ void CropDistortNode::UpdateGizmoPositions(const NodeValueRow &row, const NodeGl
   poly_gizmo_->SetPolygon(QRectF(left_pt, top_pt, right_pt - left_pt, bottom_pt - top_pt));
 }
 
-/*bool CropDistortNode::GizmoPress(const NodeValueRow &row, const NodeGlobals &globals, const QPointF &p)
+void CropDistortNode::GizmoDragMove(double x_diff, double y_diff, const Qt::KeyboardModifiers &modifiers)
 {
-  bool found_handle = false;
+  DraggableGizmo *gizmo = static_cast<DraggableGizmo*>(sender());
 
-  bool gizmo_active[kGizmoScaleCount] = {false};
+  QVector2D res = gizmo->GetGlobals().resolution();
+  x_diff /= res.x();
+  y_diff /= res.y();
 
-  for (int i=0; i<kGizmoScaleCount; i++) {
-    gizmo_active[i] = gizmo_resize_handle_[i].contains(p);
-
-    if (gizmo_active[i]) {
-      found_handle = true;
-      break;
+  for (int j=0; j<gizmo->GetDraggers().size(); j++) {
+    NodeInputDragger& i = gizmo->GetDraggers()[j];
+    double s = i.GetStartValue().toDouble();
+    if (i.GetInput().input().input() == kLeftInput) {
+      i.Drag(s + x_diff);
+    } else if (i.GetInput().input().input() == kTopInput) {
+      i.Drag(s + y_diff);
+    } else if (i.GetInput().input().input() == kRightInput) {
+      i.Drag(s - x_diff);
+    } else if (i.GetInput().input().input() == kBottomInput) {
+      i.Drag(s - y_diff);
     }
-  }
-
-  bool in_rect = found_handle ? false : gizmo_whole_rect_.contains(p);
-
-  gizmo_drag_ = kGizmoNone;
-
-  // Drag handle
-  if (gizmo_active[kGizmoScaleTopLeft]
-      || gizmo_active[kGizmoScaleCenterLeft]
-      || gizmo_active[kGizmoScaleBottomLeft]
-      || in_rect) {
-    gizmo_drag_ |= kGizmoLeft;
-
-    gizmo_start_.append(row[kLeftInput].data());
-  }
-
-  if (gizmo_active[kGizmoScaleTopLeft]
-      || gizmo_active[kGizmoScaleTopCenter]
-      || gizmo_active[kGizmoScaleTopRight]
-      || in_rect) {
-    gizmo_drag_ |= kGizmoTop;
-
-    gizmo_start_.append(row[kTopInput].data());
-  }
-
-  if (gizmo_active[kGizmoScaleTopRight]
-      || gizmo_active[kGizmoScaleCenterRight]
-      || gizmo_active[kGizmoScaleBottomRight]
-      || in_rect) {
-    gizmo_drag_ |= kGizmoRight;
-
-    gizmo_start_.append(row[kRightInput].data());
-  }
-
-  if (gizmo_active[kGizmoScaleBottomLeft]
-      || gizmo_active[kGizmoScaleBottomCenter]
-      || gizmo_active[kGizmoScaleBottomRight]
-      || in_rect) {
-    gizmo_drag_ |= kGizmoBottom;
-
-    gizmo_start_.append(row[kBottomInput].data());
-  }
-
-  if (gizmo_drag_ > kGizmoNone) {
-    gizmo_res_ = globals.resolution();
-    gizmo_drag_start_ = p;
-
-    return true;
-  }
-
-  return false;
-}
-
-void CropDistortNode::GizmoMove(const QPointF &p, const rational &time, const Qt::KeyboardModifiers &modifiers)
-{
-  if (gizmo_dragger_.isEmpty()) {
-    gizmo_dragger_.resize(gizmo_start_.size());
-
-    int counter = 0;
-
-    if (gizmo_drag_ & kGizmoLeft) {
-      gizmo_dragger_[counter].Start(NodeInput(this, kLeftInput), time);
-      counter++;
-    }
-
-    if (gizmo_drag_ & kGizmoTop) {
-      gizmo_dragger_[counter].Start(NodeInput(this, kTopInput), time);
-      counter++;
-    }
-
-    if (gizmo_drag_ & kGizmoRight) {
-      gizmo_dragger_[counter].Start(NodeInput(this, kRightInput), time);
-      counter++;
-    }
-
-    if (gizmo_drag_ & kGizmoBottom) {
-      gizmo_dragger_[counter].Start(NodeInput(this, kBottomInput), time);
-      counter++;
-    }
-  }
-
-  int counter = 0;
-
-  double x_diff = (p.x() - gizmo_drag_start_.x()) / gizmo_res_.x();
-  double y_diff = (p.y() - gizmo_drag_start_.y()) / gizmo_res_.y();
-
-  if (gizmo_drag_ & kGizmoLeft) {
-    gizmo_dragger_[counter].Drag(gizmo_start_[counter].toDouble() + x_diff);
-    counter++;
-  }
-
-  if (gizmo_drag_ & kGizmoTop) {
-    gizmo_dragger_[counter].Drag(gizmo_start_[counter].toDouble() + y_diff);
-    counter++;
-  }
-
-  if (gizmo_drag_ & kGizmoRight) {
-    gizmo_dragger_[counter].Drag(gizmo_start_[counter].toDouble() - x_diff);
-    counter++;
-  }
-
-  if (gizmo_drag_ & kGizmoBottom) {
-    gizmo_dragger_[counter].Drag(gizmo_start_[counter].toDouble() - y_diff);
-    counter++;
   }
 }
-
-void CropDistortNode::GizmoRelease(MultiUndoCommand *command)
-{
-  for (NodeInputDragger& i : gizmo_dragger_) {
-    i.End(command);
-  }
-  gizmo_dragger_.clear();
-
-  gizmo_start_.clear();
-}*/
 
 void CropDistortNode::CreateCropSideInput(const QString &id)
 {
@@ -251,6 +168,15 @@ void CropDistortNode::CreateCropSideInput(const QString &id)
   SetInputProperty(id, QStringLiteral("min"), 0.0);
   SetInputProperty(id, QStringLiteral("max"), 1.0);
   SetInputProperty(id, QStringLiteral("view"), FloatSlider::kPercentage);
+}
+
+template<typename T>
+T *CropDistortNode::AddGizmo()
+{
+  T *gizmo = new T(this);
+  gizmo->SetDragValueBehavior(PointGizmo::kDeltaFromStart);
+  connect(gizmo, &DraggableGizmo::HandleMovement, this, &CropDistortNode::GizmoDragMove);
+  return gizmo;
 }
 
 }

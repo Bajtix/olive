@@ -51,6 +51,11 @@ public:
     return start_value_;
   }
 
+  const NodeKeyframeTrackReference &GetInput() const
+  {
+    return input_;
+  }
+
 private:
   NodeKeyframeTrackReference input_;
 

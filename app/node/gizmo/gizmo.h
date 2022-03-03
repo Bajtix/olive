@@ -24,6 +24,8 @@
 #include <QObject>
 #include <QPainter>
 
+#include "node/globals.h"
+
 namespace olive {
 
 class NodeGizmo : public QObject
@@ -34,7 +36,13 @@ public:
 
   virtual void Draw(QPainter *p) const = 0;
 
+  const NodeGlobals &GetGlobals() const { return globals_; }
+  void SetGlobals(const NodeGlobals &globals) { globals_ = globals; }
+
 signals:
+
+private:
+  NodeGlobals globals_;
 
 };
 

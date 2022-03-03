@@ -23,11 +23,11 @@
 
 #include <QPointF>
 
-#include "gizmo.h"
+#include "draggable.h"
 
 namespace olive {
 
-class PointGizmo : public NodeGizmo
+class PointGizmo : public DraggableGizmo
 {
   Q_OBJECT
 public:
@@ -52,7 +52,7 @@ public:
 
   virtual void Draw(QPainter *p) const override;
 
-  QRectF GetClickingRect() const;
+  QRectF GetClickingRect(const QTransform &t) const;
 
 private:
   static double GetStandardRadius();
