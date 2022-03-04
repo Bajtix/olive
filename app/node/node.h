@@ -35,7 +35,7 @@
 #include "common/rational.h"
 #include "common/timerange.h"
 #include "common/xmlutils.h"
-#include "node/gizmo/gizmo.h"
+#include "node/gizmo/draggable.h"
 #include "node/globals.h"
 #include "node/keyframe.h"
 #include "node/inputimmediate.h"
@@ -1036,6 +1036,31 @@ protected:
   {
     flags_ = f;
   }
+
+  template<typename T>
+  T *AddDraggableGizmo(const QVector<NodeKeyframeTrackReference> &inputs = QVector<NodeKeyframeTrackReference>(), DraggableGizmo::DragValueBehavior behavior = DraggableGizmo::kDeltaFromStart)
+  {
+    T *gizmo = new T(this);
+    gizmo->SetDragValueBehavior(behavior);
+    foreach (const NodeKeyframeTrackReference &input, inputs) {
+      gizmo->AddInput(input);
+    }
+    connect(gizmo, &DraggableGizmo::HandleMovement, this, &Node::GizmoDragMove);
+    return gizmo;
+  }
+
+  template<typename T>
+  T *AddDraggableGizmo(const QStringList &inputs, DraggableGizmo::DragValueBehavior behavior = DraggableGizmo::kDeltaFromStart)
+  {
+    QVector<NodeKeyframeTrackReference> refs(inputs.size());
+    for (int i=0; i<refs.size(); i++) {
+      refs[i] = NodeInput(this, inputs[i]);
+    }
+    return AddDraggableGizmo<T>(refs, behavior);
+  }
+
+protected slots:
+  virtual void GizmoDragMove(double x, double y, const Qt::KeyboardModifiers &modifiers){}
 
 signals:
   /**

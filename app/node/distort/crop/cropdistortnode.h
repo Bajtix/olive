@@ -78,28 +78,15 @@ public:
   static const QString kBottomInput;
   static const QString kFeatherInput;
 
+protected slots:
+  virtual void GizmoDragMove(double delta_x, double delta_y, const Qt::KeyboardModifiers &modifiers) override;
+
 private:
   void CreateCropSideInput(const QString& id);
-
-  template<typename T>
-  T *AddGizmo();
 
   // Gizmo variables
   PointGizmo *point_gizmo_[kGizmoScaleCount];
   PolygonGizmo *poly_gizmo_;
-
-  enum GizmoDragDirection {
-    kGizmoNone = 0x0,
-    kGizmoLeft = 0x1,
-    kGizmoTop = 0x2,
-    kGizmoRight = 0x4,
-    kGizmoBottom = 0x8,
-    kGizmoAll = 0xFF
-  };
-
-private slots:
-  void GizmoDragMove(double delta_x, double delta_y, const Qt::KeyboardModifiers &modifiers);
-
 
 };
 

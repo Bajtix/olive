@@ -30,7 +30,6 @@ DraggableGizmo::DraggableGizmo(QObject *parent)
 
 void DraggableGizmo::DragStart(const rational &time)
 {
-  qDebug() << this << "Starting";
   for (int i=0; i<draggers_.size(); i++) {
     draggers_[i].Start(inputs_[i], time);
   }
@@ -43,7 +42,6 @@ void DraggableGizmo::DragMove(double x, double y, const Qt::KeyboardModifiers &m
 
 void DraggableGizmo::DragEnd(MultiUndoCommand *command)
 {
-  qDebug() << this << "Ending";
   for (int i=0; i<draggers_.size(); i++) {
     draggers_[i].End(command);
   }

@@ -44,21 +44,24 @@ public:
   static QString kSizeInput;
   static QString kColorInput;
 
+protected slots:
+  virtual void GizmoDragMove(double x, double y, const Qt::KeyboardModifiers &modifiers) override;
+
 private:
-  static QVector2D GenerateGizmoAnchor(const QVector2D &pos, const QVector2D &size, int drag, QVector2D *pt);
+  QVector2D GenerateGizmoAnchor(const QVector2D &pos, const QVector2D &size, NodeGizmo *gizmo, QVector2D *pt = nullptr) const;
+
+  bool IsGizmoTop(NodeGizmo *g) const;
+  bool IsGizmoBottom(NodeGizmo *g) const;
+  bool IsGizmoLeft(NodeGizmo *g) const;
+  bool IsGizmoRight(NodeGizmo *g) const;
+  bool IsGizmoHorizontalCenter(NodeGizmo *g) const;
+  bool IsGizmoVerticalCenter(NodeGizmo *g) const;
+  bool IsGizmoCorner(NodeGizmo *g) const;
 
   // Gizmo variables
   static const int kGizmoWholeRect = kGizmoScaleCount;
   PointGizmo *point_gizmo_[kGizmoScaleCount];
   PolygonGizmo *poly_gizmo_;
-
-  int gizmo_drag_;
-  QVector<NodeInputDragger> gizmo_dragger_;
-  QVector2D gizmo_pos_start_;
-  QVector2D gizmo_sz_start_;
-  QPointF gizmo_drag_start_;
-  float gizmo_aspect_ratio_;
-  QVector2D gizmo_half_res_;
 
 };
 
