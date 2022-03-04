@@ -83,16 +83,14 @@ public:
   static const QString kBottomRightInput;
   static const QString kBottomLeftInput;
 
+protected slots:
+  virtual void GizmoDragMove(double x, double y, const Qt::KeyboardModifiers &modifiers) override;
+
 private:
   // Gizmo variables
   static const int kGizmoCornerCount = 4;
   PointGizmo *gizmo_resize_handle_[kGizmoCornerCount];
   PolygonGizmo *gizmo_whole_rect_;
-
-  int gizmo_drag_;
-  QVector<NodeInputDragger> gizmo_dragger_;
-  QPointF gizmo_drag_start_;
-  QVector2D gizmo_res_;
 
 };
 

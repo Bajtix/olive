@@ -43,10 +43,11 @@ CornerPinDistortNode::CornerPinDistortNode()
   AddInput(kBottomLeftInput, NodeValue::kVec2, QVector2D(0.0, 0.0));
 
   // Initiate gizmos
-  gizmo_whole_rect_ = new PolygonGizmo(this);
-  for (int i=0; i<kGizmoCornerCount; i++) {
-    gizmo_resize_handle_[i] = new PointGizmo(this);
-  }
+  gizmo_resize_handle_[0] = AddDraggableGizmo<PointGizmo>({NodeKeyframeTrackReference(NodeInput(this, kTopLeftInput), 0), NodeKeyframeTrackReference(NodeInput(this, kTopLeftInput), 1)});
+  gizmo_resize_handle_[1] = AddDraggableGizmo<PointGizmo>({NodeKeyframeTrackReference(NodeInput(this, kTopRightInput), 0), NodeKeyframeTrackReference(NodeInput(this, kTopRightInput), 1)});
+  gizmo_resize_handle_[2] = AddDraggableGizmo<PointGizmo>({NodeKeyframeTrackReference(NodeInput(this, kBottomRightInput), 0), NodeKeyframeTrackReference(NodeInput(this, kBottomRightInput), 1)});
+  gizmo_resize_handle_[3] = AddDraggableGizmo<PointGizmo>({NodeKeyframeTrackReference(NodeInput(this, kBottomLeftInput), 0), NodeKeyframeTrackReference(NodeInput(this, kBottomLeftInput), 1)});
+  gizmo_whole_rect_ = AddDraggableGizmo<PolygonGizmo>();
 }
 
 void CornerPinDistortNode::Retranslate()
@@ -132,6 +133,16 @@ QPointF CornerPinDistortNode::ValueToPixel(int value, const NodeValueRow& row, c
   }
 }
 
+void CornerPinDistortNode::GizmoDragMove(double x, double y, const Qt::KeyboardModifiers &modifiers)
+{
+  DraggableGizmo *gizmo = static_cast<DraggableGizmo*>(sender());
+
+  if (gizmo != gizmo_whole_rect_) {
+    gizmo->GetDraggers()[0].Drag(gizmo->GetDraggers()[0].GetStartValue().toDouble() + x);
+    gizmo->GetDraggers()[1].Drag(gizmo->GetDraggers()[1].GetStartValue().toDouble() + y);
+  }
+}
+
 void CornerPinDistortNode::UpdateGizmoPositions(const NodeValueRow &row, const NodeGlobals &globals)
 {
   const QVector2D &resolution = globals.resolution();
@@ -148,7 +159,7 @@ void CornerPinDistortNode::UpdateGizmoPositions(const NodeValueRow &row, const N
   SetInputProperty(kBottomLeftInput, QStringLiteral("offset"), QVector2D(0.0, resolution.y()));
 
   // Draw bounding box
-  gizmo_whole_rect_->SetPolygon(QPolygonF({top_left, top_right, bottom_right, bottom_left}));
+  gizmo_whole_rect_->SetPolygon(QPolygonF({top_left, top_right, bottom_right, bottom_left, top_left}));
 
   // Create handles
   gizmo_resize_handle_[0]->SetPoint(top_left);
@@ -156,59 +167,5 @@ void CornerPinDistortNode::UpdateGizmoPositions(const NodeValueRow &row, const N
   gizmo_resize_handle_[2]->SetPoint(bottom_right);
   gizmo_resize_handle_[3]->SetPoint(bottom_left);
 }
-
-/*
-bool CornerPinDistortNode::GizmoPress(const NodeValueRow &row, const NodeGlobals &globals, const QPointF &p)
-{
-  bool gizmo_active[kGizmoCornerCount] = {false};
-
-  for (int i = 0; i < kGizmoCornerCount; i++) {
-    gizmo_active[i] = gizmo_resize_handle_[i].contains(p);
-
-    if (gizmo_active[i]) {
-      gizmo_drag_start_ = p;
-      gizmo_res_ = globals.resolution();
-      gizmo_drag_ = i;
-      return true;
-    }
-  }
-
-  return false;
-}
-
-void CornerPinDistortNode::GizmoMove(const QPointF &p, const rational &time, const Qt::KeyboardModifiers &modifiers)
-{
-  if (gizmo_dragger_.isEmpty()) {
-    gizmo_dragger_.resize(2);
-    if (gizmo_drag_ == 0) {
-      gizmo_dragger_[0].Start(NodeKeyframeTrackReference(NodeInput(this, kTopLeftInput), 0), time);
-      gizmo_dragger_[1].Start(NodeKeyframeTrackReference(NodeInput(this, kTopLeftInput), 1), time);
-    }
-    if (gizmo_drag_ == 1) {
-      gizmo_dragger_[0].Start(NodeKeyframeTrackReference(NodeInput(this, kTopRightInput), 0), time);
-      gizmo_dragger_[1].Start(NodeKeyframeTrackReference(NodeInput(this, kTopRightInput), 1), time);
-    }
-    if (gizmo_drag_ == 2) {
-      gizmo_dragger_[0].Start(NodeKeyframeTrackReference(NodeInput(this, kBottomRightInput), 0), time);
-      gizmo_dragger_[1].Start(NodeKeyframeTrackReference(NodeInput(this, kBottomRightInput), 1), time);
-    }
-    if (gizmo_drag_ == 3) {
-      gizmo_dragger_[0].Start(NodeKeyframeTrackReference(NodeInput(this, kBottomLeftInput), 0), time);
-      gizmo_dragger_[1].Start(NodeKeyframeTrackReference(NodeInput(this, kBottomLeftInput), 1), time);
-    }
-  }
-
-  QPointF diff = p - gizmo_drag_start_;
-  gizmo_dragger_[0].Drag(gizmo_dragger_[0].GetStartValue().toDouble() + diff.x());
-  gizmo_dragger_[1].Drag(gizmo_dragger_[1].GetStartValue().toDouble() + diff.y());
-}
-
-void CornerPinDistortNode::GizmoRelease(MultiUndoCommand *command) {
-  for (NodeInputDragger &i : gizmo_dragger_) {
-    i.End(command);
-  }
-  gizmo_dragger_.clear();
-}
-*/
 
 }
