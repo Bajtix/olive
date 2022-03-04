@@ -83,7 +83,7 @@ public:
    * @brief Transform a point from viewer space to the buffer space.
    * Multiplies by the inverted transform matrix to undo the scaling and translation.
    */
-  QPointF TransformViewerSpaceToBufferSpace(const QPoint &pos);
+  QPointF TransformViewerSpaceToBufferSpace(const QPointF &pos);
 
   bool IsDeinterlacing() const
   {

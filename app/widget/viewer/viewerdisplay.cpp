@@ -179,7 +179,7 @@ void ViewerDisplayWidget::SetTime(const rational &time)
   }
 }
 
-QPointF ViewerDisplayWidget::TransformViewerSpaceToBufferSpace(const QPoint &pos)
+QPointF ViewerDisplayWidget::TransformViewerSpaceToBufferSpace(const QPointF &pos)
 {
   /*
   * Inversion will only fail if the viewer has been scaled by 0 in any direction
@@ -599,7 +599,6 @@ NodeGizmo *ViewerDisplayWidget::TryGizmoPress(const NodeValueRow &row, const QPo
         return point;
       }
     } else if (PolygonGizmo *poly = dynamic_cast<PolygonGizmo*>(gizmo)) {
-      qDebug() << "poly:" << poly->GetPolygon() << p << poly->GetPolygon().contains(p);
       if (poly->GetPolygon().containsPoint(p, Qt::OddEvenFill)) {
         return poly;
       }
