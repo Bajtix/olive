@@ -58,6 +58,9 @@ public:
   static const QString kPointsInput;
   static const QString kColorInput;
 
+protected slots:
+  virtual void GizmoDragMove(double x, double y, const Qt::KeyboardModifiers &modifiers) override;
+
 private:
   static void AddPointToPath(QPainterPath *path, const Bezier &before, const Bezier &after);
 
