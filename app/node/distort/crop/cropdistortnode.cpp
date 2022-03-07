@@ -46,6 +46,8 @@ CropDistortNode::CropDistortNode()
   SetInputProperty(kFeatherInput, QStringLiteral("min"), 0.0);
 
   // Initiate gizmos
+  poly_gizmo_ = AddDraggableGizmo<PolygonGizmo>({kLeftInput, kTopInput, kRightInput, kBottomInput});
+
   point_gizmo_[kGizmoScaleTopLeft] = AddDraggableGizmo<PointGizmo>({kLeftInput, kTopInput});
   point_gizmo_[kGizmoScaleTopCenter] = AddDraggableGizmo<PointGizmo>({kTopInput});
   point_gizmo_[kGizmoScaleTopRight] = AddDraggableGizmo<PointGizmo>({kRightInput, kTopInput});
@@ -54,8 +56,6 @@ CropDistortNode::CropDistortNode()
   point_gizmo_[kGizmoScaleBottomRight] = AddDraggableGizmo<PointGizmo>({kRightInput, kBottomInput});
   point_gizmo_[kGizmoScaleCenterLeft] = AddDraggableGizmo<PointGizmo>({kLeftInput});
   point_gizmo_[kGizmoScaleCenterRight] = AddDraggableGizmo<PointGizmo>({kRightInput});
-
-  poly_gizmo_ = AddDraggableGizmo<PolygonGizmo>({kLeftInput, kTopInput, kRightInput, kBottomInput});
 }
 
 void CropDistortNode::Retranslate()

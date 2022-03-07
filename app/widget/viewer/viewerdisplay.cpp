@@ -36,6 +36,7 @@
 #include "node/gizmo/path.h"
 #include "node/gizmo/point.h"
 #include "node/gizmo/polygon.h"
+#include "node/gizmo/screen.h"
 #include "node/traverser.h"
 
 namespace olive {
@@ -251,7 +252,14 @@ void ViewerDisplayWidget::mouseMoveEvent(QMouseEvent *event)
     // Signal movement
     if (DraggableGizmo *draggable = dynamic_cast<DraggableGizmo*>(current_gizmo_)) {
       if (!gizmo_drag_started_) {
-        draggable->DragStart(GetGizmoTime());
+        QPointF start = TransformViewerSpaceToBufferSpace(gizmo_start_drag_);
+
+        rational gizmo_time = GetGizmoTime();
+        NodeTraverser t;
+        t.SetCacheVideoParams(gizmo_params_);
+        NodeValueRow row = t.GenerateRow(gizmos_, TimeRange(gizmo_time, gizmo_time + gizmo_params_.frame_rate_as_time_base()));
+
+        draggable->DragStart(row, start.x(), start.y(), gizmo_time);
         gizmo_drag_started_ = true;
       }
 
@@ -292,13 +300,15 @@ void ViewerDisplayWidget::mouseReleaseEvent(QMouseEvent *event)
   } else if (current_gizmo_) {
 
     // Handle gizmo
-    MultiUndoCommand *command = new MultiUndoCommand();
-    if (DraggableGizmo *draggable = dynamic_cast<DraggableGizmo*>(current_gizmo_)) {
-      draggable->DragEnd(command);
+    if (gizmo_drag_started_) {
+      MultiUndoCommand *command = new MultiUndoCommand();
+      if (DraggableGizmo *draggable = dynamic_cast<DraggableGizmo*>(current_gizmo_)) {
+        draggable->DragEnd(command);
+      }
+      Core::instance()->undo_stack()->pushIfHasChildren(command);
+      gizmo_drag_started_ = false;
     }
-    Core::instance()->undo_stack()->pushIfHasChildren(command);
     current_gizmo_ = nullptr;
-    gizmo_drag_started_ = false;
 
   } else {
 
@@ -593,7 +603,8 @@ QTransform ViewerDisplayWidget::GenerateGizmoTransform()
 
 NodeGizmo *ViewerDisplayWidget::TryGizmoPress(const NodeValueRow &row, const QPointF &p)
 {
-  foreach (NodeGizmo *gizmo, gizmos_->GetGizmos()) {
+  for (auto it=gizmos_->GetGizmos().crbegin(); it!=gizmos_->GetGizmos().crend(); it++) {
+    NodeGizmo *gizmo = *it;
     if (PointGizmo *point = dynamic_cast<PointGizmo*>(gizmo)) {
       if (point->GetClickingRect(GenerateGizmoTransform()).contains(p)) {
         return point;
@@ -606,6 +617,9 @@ NodeGizmo *ViewerDisplayWidget::TryGizmoPress(const NodeValueRow &row, const QPo
       if (path->GetPath().contains(p)) {
         return path;
       }
+    } else if (ScreenGizmo *screen = dynamic_cast<ScreenGizmo*>(gizmo)) {
+      // NOTE: Perhaps this should limit to the actual visible screen space? We'll see.
+      return screen;
     }
   }
 

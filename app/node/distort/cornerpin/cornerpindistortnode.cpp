@@ -43,11 +43,11 @@ CornerPinDistortNode::CornerPinDistortNode()
   AddInput(kBottomLeftInput, NodeValue::kVec2, QVector2D(0.0, 0.0));
 
   // Initiate gizmos
+  gizmo_whole_rect_ = AddDraggableGizmo<PolygonGizmo>();
   gizmo_resize_handle_[0] = AddDraggableGizmo<PointGizmo>({NodeKeyframeTrackReference(NodeInput(this, kTopLeftInput), 0), NodeKeyframeTrackReference(NodeInput(this, kTopLeftInput), 1)});
   gizmo_resize_handle_[1] = AddDraggableGizmo<PointGizmo>({NodeKeyframeTrackReference(NodeInput(this, kTopRightInput), 0), NodeKeyframeTrackReference(NodeInput(this, kTopRightInput), 1)});
   gizmo_resize_handle_[2] = AddDraggableGizmo<PointGizmo>({NodeKeyframeTrackReference(NodeInput(this, kBottomRightInput), 0), NodeKeyframeTrackReference(NodeInput(this, kBottomRightInput), 1)});
   gizmo_resize_handle_[3] = AddDraggableGizmo<PointGizmo>({NodeKeyframeTrackReference(NodeInput(this, kBottomLeftInput), 0), NodeKeyframeTrackReference(NodeInput(this, kBottomLeftInput), 1)});
-  gizmo_whole_rect_ = AddDraggableGizmo<PolygonGizmo>();
 }
 
 void CornerPinDistortNode::Retranslate()

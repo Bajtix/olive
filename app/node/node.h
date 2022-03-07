@@ -1045,6 +1045,7 @@ protected:
     foreach (const NodeKeyframeTrackReference &input, inputs) {
       gizmo->AddInput(input);
     }
+    connect(gizmo, &DraggableGizmo::HandleStart, this, &Node::GizmoDragStart);
     connect(gizmo, &DraggableGizmo::HandleMovement, this, &Node::GizmoDragMove);
     return gizmo;
   }
@@ -1060,6 +1061,8 @@ protected:
   }
 
 protected slots:
+  virtual void GizmoDragStart(const olive::NodeValueRow &row, double x, double y, const olive::rational &time){}
+
   virtual void GizmoDragMove(double x, double y, const Qt::KeyboardModifiers &modifiers){}
 
 signals:

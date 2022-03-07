@@ -56,6 +56,11 @@ public:
     return input_;
   }
 
+  const rational &GetTime() const
+  {
+    return time_;
+  }
+
 private:
   NodeKeyframeTrackReference input_;
 

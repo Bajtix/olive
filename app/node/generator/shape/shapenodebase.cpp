@@ -48,13 +48,13 @@ ShapeNodeBase::ShapeNodeBase()
     NodeKeyframeTrackReference(NodeInput(this, kSizeInput), 0),
     NodeKeyframeTrackReference(NodeInput(this, kSizeInput), 1)
   };
-  for (int i=0; i<kGizmoScaleCount; i++) {
-    point_gizmo_[i] = AddDraggableGizmo<PointGizmo>(pos_n_sz, PointGizmo::kAbsolute);
-  }
   poly_gizmo_ = AddDraggableGizmo<PolygonGizmo>({
     NodeKeyframeTrackReference(NodeInput(this, kPositionInput), 0),
     NodeKeyframeTrackReference(NodeInput(this, kPositionInput), 1),
   });
+  for (int i=0; i<kGizmoScaleCount; i++) {
+    point_gizmo_[i] = AddDraggableGizmo<PointGizmo>(pos_n_sz, PointGizmo::kAbsolute);
+  }
 }
 
 void ShapeNodeBase::Retranslate()

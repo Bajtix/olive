@@ -74,12 +74,6 @@ private:
   QVector<PointGizmo*> gizmo_bezier_handles_;
   QVector<LineGizmo*> gizmo_bezier_lines_;
 
-  QVector<NodeKeyframeTrackReference> gizmo_x_active_;
-  QVector<NodeKeyframeTrackReference> gizmo_y_active_;
-  QVector<NodeInputDragger> gizmo_x_draggers_;
-  QVector<NodeInputDragger> gizmo_y_draggers_;
-  QPointF gizmo_drag_start_;
-
 };
 
 }
