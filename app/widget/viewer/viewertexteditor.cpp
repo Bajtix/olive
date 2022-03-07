@@ -160,7 +160,8 @@ void ViewerTextEditor::SetStyle(const QString &s)
 }
 
 ViewerTextEditorToolBar::ViewerTextEditorToolBar(QWidget *parent) :
-  QWidget(parent)
+  QWidget(parent),
+  painted_(false)
 {
   QHBoxLayout *layout = new QHBoxLayout(this);
 
@@ -236,6 +237,15 @@ void ViewerTextEditorToolBar::SetAlignment(Qt::Alignment a)
 void ViewerTextEditorToolBar::closeEvent(QCloseEvent *event)
 {
   event->ignore();
+}
+
+void ViewerTextEditorToolBar::paintEvent(QPaintEvent *event)
+{
+  if (!painted_) {
+    emit FirstPaint();
+    painted_ = true;
+  }
+  QWidget::paintEvent(event);
 }
 
 void ViewerTextEditorToolBar::UpdateFontStyleList(const QString &family)

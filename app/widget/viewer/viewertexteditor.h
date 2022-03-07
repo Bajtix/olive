@@ -71,6 +71,8 @@ signals:
   void UnderlineChanged(bool e);
   void AlignmentChanged(Qt::Alignment alignment);
 
+  void FirstPaint();
+
 protected:
   virtual void mousePressEvent(QMouseEvent *event) override;
 
@@ -79,6 +81,8 @@ protected:
   virtual void mouseReleaseEvent(QMouseEvent *event) override;
 
   virtual void closeEvent(QCloseEvent *event) override;
+
+  virtual void paintEvent(QPaintEvent *event) override;
 
 private:
   QPoint drag_anchor_;
@@ -99,6 +103,8 @@ private:
   QPushButton *align_justify_btn_;
 
   QPushButton *color_btn_;
+
+  bool painted_;
 
 private slots:
   void UpdateFontStyleList(const QString &family);
