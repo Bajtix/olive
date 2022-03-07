@@ -34,7 +34,7 @@ class NodeGizmo : public QObject
 public:
   explicit NodeGizmo(QObject *parent = nullptr);
 
-  virtual void Draw(QPainter *p) const = 0;
+  virtual void Draw(QPainter *p) const {}
 
   const NodeGlobals &GetGlobals() const { return globals_; }
   void SetGlobals(const NodeGlobals &globals) { globals_ = globals; }

@@ -947,6 +947,8 @@ public:
 
   InputFlags GetInputFlags(const QString& input) const;
 
+  static void SetValueAtTime(const NodeInput &input, const rational &time, const QVariant &value, int track, MultiUndoCommand *command, bool insert_on_all_tracks_if_no_key);
+
 protected:
   virtual void Hash(QCryptographicHash& hash, const NodeGlobals &globals, const VideoParams& video_params) const;
 

@@ -44,6 +44,12 @@ public:
   static QString kSizeInput;
   static QString kColorInput;
 
+protected:
+  PolygonGizmo *poly_gizmo() const
+  {
+    return poly_gizmo_;
+  }
+
 protected slots:
   virtual void GizmoDragMove(double x, double y, const Qt::KeyboardModifiers &modifiers) override;
 

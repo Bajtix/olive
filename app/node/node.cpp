@@ -1894,6 +1894,44 @@ void Node::InvalidateFromKeyframeTypeChanged()
   emit KeyframeTypeChanged(key);
 }
 
+void Node::SetValueAtTime(const NodeInput &input, const rational &time, const QVariant &value, int track, MultiUndoCommand *command, bool insert_on_all_tracks_if_no_key)
+{
+  if (input.IsKeyframing()) {
+    rational node_time = time;
+
+    NodeKeyframe* existing_key = input.GetKeyframeAtTimeOnTrack(node_time, track);
+
+    if (existing_key) {
+      command->add_child(new NodeParamSetKeyframeValueCommand(existing_key, value));
+    } else {
+      // No existing key, create a new one
+      int nb_tracks = NodeValue::get_number_of_keyframe_tracks(input.node()->GetInputDataType(input.input()));
+      for (int i=0; i<nb_tracks; i++) {
+        QVariant track_value;
+
+        if (i == track) {
+          track_value = value;
+        } else if (!insert_on_all_tracks_if_no_key) {
+          continue;
+        } else {
+          track_value = input.node()->GetSplitValueAtTimeOnTrack(input.input(), node_time, i, input.element());
+        }
+
+        NodeKeyframe* new_key = new NodeKeyframe(node_time,
+                                                 track_value,
+                                                 input.node()->GetBestKeyframeTypeForTimeOnTrack(NodeKeyframeTrackReference(input, i), node_time),
+                                                 i,
+                                                 input.element(),
+                                                 input.input());
+
+        command->add_child(new NodeParamInsertKeyframeCommand(input.node(), new_key));
+      }
+    }
+  } else {
+    command->add_child(new NodeParamSetStandardValueCommand(NodeKeyframeTrackReference(input, track), value));
+  }
+}
+
 Project *Node::ArrayInsertCommand::GetRelevantProject() const
 {
   return node_->project();

@@ -21,6 +21,8 @@
 #include "viewerdisplay.h"
 
 #include <OpenImageIO/imagebuf.h>
+#include <QAbstractTextDocumentLayout>
+#include <QApplication>
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QMouseEvent>
@@ -28,6 +30,9 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLTexture>
 #include <QPainter>
+#include <QPushButton>
+#include <QScreen>
+#include <QTextEdit>
 
 #include "common/define.h"
 #include "common/functiontimer.h"
@@ -37,7 +42,10 @@
 #include "node/gizmo/point.h"
 #include "node/gizmo/polygon.h"
 #include "node/gizmo/screen.h"
+#include "node/gizmo/text.h"
 #include "node/traverser.h"
+#include "viewertexteditor.h"
+#include "window/mainwindow/mainwindow.h"
 
 namespace olive {
 
@@ -316,6 +324,56 @@ void ViewerDisplayWidget::mouseReleaseEvent(QMouseEvent *event)
     super::mouseReleaseEvent(event);
 
   }
+}
+
+void ViewerDisplayWidget::mouseDoubleClickEvent(QMouseEvent *event)
+{
+  if (event->button() == Qt::LeftButton && gizmos_) {
+    QPointF ptr = TransformViewerSpaceToBufferSpace(event->pos());
+    foreach (NodeGizmo *g, gizmos_->GetGizmos()) {
+      if (TextGizmo *text = dynamic_cast<TextGizmo*>(g)) {
+        if (text->GetRect().contains(ptr)) {
+          ViewerTextEditor *text_edit = new ViewerTextEditor(this);
+          text_edit->setHtml(text->GetHtml());
+          text_edit->setProperty("gizmo", reinterpret_cast<quintptr>(text));
+
+          QRectF transformed_geom = GenerateGizmoTransform().map(text->GetRect()).boundingRect();
+          text_edit->setGeometry(transformed_geom.toRect());
+
+          ViewerTextEditorToolBar *toolbar = new ViewerTextEditorToolBar(this);
+          toolbar->setWindowFlags(Qt::FramelessWindowHint | Qt::Window | Qt::WindowStaysOnTopHint);
+          toolbar->resize(toolbar->sizeHint());
+
+          QPoint pos = mapToGlobal(QPoint(transformed_geom.x(), transformed_geom.y() - toolbar->height()));
+          for (QScreen *screen : qApp->screens()) {
+            if (screen->geometry().contains(pos)) {
+              if (pos.x() + toolbar->width() > screen->geometry().right()) {
+                pos.setX(screen->geometry().right() - toolbar->width());
+              }
+              break;
+            }
+          }
+          toolbar->move(pos);
+          toolbar->show();
+          text_edit->ConnectToolBar(toolbar);
+
+          text_edit->show();
+
+          connect(text_edit, &ViewerTextEditor::textChanged, this, &ViewerDisplayWidget::TextEditChanged);
+
+          // Ensure text edit is actually focused rather than the toolbar
+          QMetaObject::invokeMethod(this, [this, text_edit]{
+            this->raise();
+            this->activateWindow();
+            text_edit->setFocus();
+          }, Qt::QueuedConnection);
+          break;
+        }
+      }
+    }
+  }
+
+  super::mouseDoubleClickEvent(event);
 }
 
 void ViewerDisplayWidget::dragEnterEvent(QDragEnterEvent *event)
@@ -718,6 +776,15 @@ void ViewerDisplayWidget::UpdateFromQueue()
   }
 
   update();
+}
+
+void ViewerDisplayWidget::TextEditChanged()
+{
+  ViewerTextEditor *editor = static_cast<ViewerTextEditor *>(sender());
+
+  TextGizmo *gizmo = reinterpret_cast<TextGizmo*>(editor->property("gizmo").value<quintptr>());
+
+  gizmo->UpdateInputHtml(editor->toHtml(), GetGizmoTime());
 }
 
 }

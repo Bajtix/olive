@@ -18,7 +18,7 @@
 
 ***/
 
-#include "text.h"
+#include "textv3.h"
 
 #include <QAbstractTextDocumentLayout>
 #include <QDateTime>
@@ -37,61 +37,47 @@ enum TextVerticalAlign {
   kVerticalAlignBottom,
 };
 
-const QString TextGenerator::kTextInput = QStringLiteral("text_in");
-const QString TextGenerator::kHtmlInput = QStringLiteral("html_in");
-const QString TextGenerator::kVAlignInput = QStringLiteral("valign_in");
-const QString TextGenerator::kFontInput = QStringLiteral("font_in");
-const QString TextGenerator::kFontSizeInput = QStringLiteral("font_size_in");
+const QString TextGeneratorV3::kTextInput = QStringLiteral("text_in");
 
-TextGenerator::TextGenerator()
+TextGeneratorV3::TextGeneratorV3()
 {
-  AddInput(kTextInput, NodeValue::kText, tr("Sample Text"));
-
-  AddInput(kHtmlInput, NodeValue::kBoolean, false);
-
-  AddInput(kVAlignInput, NodeValue::kCombo, kVerticalAlignTop);
-
-  AddInput(kFontInput, NodeValue::kFont);
-
-  AddInput(kFontSizeInput, NodeValue::kFloat, 72.0f);
+  AddInput(kTextInput, NodeValue::kText, QStringLiteral("<p style='font-size: 72pt;'>%1</p>").arg(tr("Sample Text")));
 
   SetStandardValue(kColorInput, QVariant::fromValue(Color(1.0f, 1.0f, 1.0)));
   SetStandardValue(kSizeInput, QVector2D(400, 300));
+
+  text_gizmo_ = new TextGizmo(this);
+  text_gizmo_->SetInput(NodeInput(this, kTextInput));
 }
 
-QString TextGenerator::Name() const
+QString TextGeneratorV3::Name() const
 {
   return tr("Text");
 }
 
-QString TextGenerator::id() const
+QString TextGeneratorV3::id() const
 {
-  return QStringLiteral("org.olivevideoeditor.Olive.text2");
+  return QStringLiteral("org.olivevideoeditor.Olive.text3");
 }
 
-QVector<Node::CategoryID> TextGenerator::Category() const
+QVector<Node::CategoryID> TextGeneratorV3::Category() const
 {
   return {kCategoryGenerator};
 }
 
-QString TextGenerator::Description() const
+QString TextGeneratorV3::Description() const
 {
   return tr("Generate rich text.");
 }
 
-void TextGenerator::Retranslate()
+void TextGeneratorV3::Retranslate()
 {
   super::Retranslate();
 
   SetInputName(kTextInput, tr("Text"));
-  SetInputName(kHtmlInput, tr("Enable HTML"));
-  SetInputName(kFontInput, tr("Font"));
-  SetInputName(kFontSizeInput, tr("Font Size"));
-  SetInputName(kVAlignInput, tr("Vertical Align"));
-  SetComboBoxStrings(kVAlignInput, {tr("Top"), tr("Center"), tr("Bottom")});
 }
 
-void TextGenerator::Value(const NodeValueRow &value, const NodeGlobals &globals, NodeValueTable *table) const
+void TextGeneratorV3::Value(const NodeValueRow &value, const NodeGlobals &globals, NodeValueTable *table) const
 {
   GenerateJob job;
   job.InsertValue(value);
@@ -103,7 +89,7 @@ void TextGenerator::Value(const NodeValueRow &value, const NodeGlobals &globals,
   }
 }
 
-void TextGenerator::GenerateFrame(FramePtr frame, const GenerateJob& job) const
+void TextGeneratorV3::GenerateFrame(FramePtr frame, const GenerateJob& job) const
 {
   // This could probably be more optimized, but for now we use Qt to draw to a QImage.
   // QImages only support integer pixels and we use float pixels, so what we do here is draw onto
@@ -112,27 +98,16 @@ void TextGenerator::GenerateFrame(FramePtr frame, const GenerateJob& job) const
   QImage img(frame->width(), frame->height(), QImage::Format_Grayscale8);
   img.fill(Qt::transparent);
 
-  // 72 DPI in DPM (72 / 2.54 * 100)
-  const int dpm = 2835;
+  // 96 DPI in DPM (96 / 2.54 * 100)
+  const int dpm = 3780;
   img.setDotsPerMeterX(dpm);
   img.setDotsPerMeterY(dpm);
 
   QTextDocument text_doc;
   text_doc.documentLayout()->setPaintDevice(&img);
 
-  // Set default font
-  QFont default_font;
-  default_font.setFamily(job.GetValue(kFontInput).data().toString());
-  default_font.setPointSizeF(job.GetValue(kFontSizeInput).data().toFloat());
-  text_doc.setDefaultFont(default_font);
-
   QString html = job.GetValue(kTextInput).data().toString();
-  if (job.GetValue(kHtmlInput).data().toBool()) {
-    html.replace('\n', QStringLiteral("<br>"));
-    text_doc.setHtml(html);
-  } else {
-    text_doc.setPlainText(html);
-  }
+  text_doc.setHtml(html);
 
   QVector2D size = job.GetValue(kSizeInput).data().value<QVector2D>();
   text_doc.setTextWidth(size.x());
@@ -141,27 +116,10 @@ void TextGenerator::GenerateFrame(FramePtr frame, const GenerateJob& job) const
   QPainter p(&img);
   p.scale(1.0 / frame->video_params().divider(), 1.0 / frame->video_params().divider());
 
-
   QVector2D pos = job.GetValue(kPositionInput).data().value<QVector2D>();
   p.translate(pos.x() - size.x()/2, pos.y() - size.y()/2);
   p.translate(frame->video_params().width()/2, frame->video_params().height()/2);
   p.setClipRect(0, 0, size.x(), size.y());
-
-  TextVerticalAlign valign = static_cast<TextVerticalAlign>(job.GetValue(kVAlignInput).data().toInt());
-  int doc_height = text_doc.size().height();
-
-  switch (valign) {
-  case kVerticalAlignTop:
-    // Do nothing
-    break;
-  case kVerticalAlignCenter:
-    // Center align
-    p.translate(0, size.y() / 2 - doc_height / 2);
-    break;
-  case kVerticalAlignBottom:
-    p.translate(0, size.y() - doc_height);
-    break;
-  }
 
   QAbstractTextDocumentLayout::PaintContext ctx;
   ctx.palette.setColor(QPalette::Text, Qt::white);
@@ -195,6 +153,15 @@ void TextGenerator::GenerateFrame(FramePtr frame, const GenerateJob& job) const
 #endif
     }
   }
+}
+
+void TextGeneratorV3::UpdateGizmoPositions(const NodeValueRow &row, const NodeGlobals &globals)
+{
+  super::UpdateGizmoPositions(row, globals);
+
+  QRectF rect = poly_gizmo()->GetPolygon().boundingRect();
+  text_gizmo_->SetRect(rect);
+  text_gizmo_->SetHtml(row[kTextInput].data().toString());
 }
 
 }

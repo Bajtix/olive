@@ -20,12 +20,24 @@
 
 #include "text.h"
 
+#include "core.h"
+#include "undo/undocommand.h"
+
 namespace olive {
 
 TextGizmo::TextGizmo(QObject *parent)
   : NodeGizmo{parent}
 {
 
+}
+
+void TextGizmo::UpdateInputHtml(const QString &s, const rational &time)
+{
+  if (input_.IsValid()) {
+    MultiUndoCommand *command = new MultiUndoCommand();
+    Node::SetValueAtTime(input_.input(), time, s, input_.track(), command, true);
+    Core::instance()->undo_stack()->pushIfHasChildren(command);
+  }
 }
 
 }

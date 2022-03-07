@@ -216,6 +216,8 @@ protected:
    */
   virtual void mouseReleaseEvent(QMouseEvent* event) override;
 
+  virtual void mouseDoubleClickEvent(QMouseEvent *event) override;
+
   virtual void dragEnterEvent(QDragEnterEvent* event) override;
 
   virtual void dragLeaveEvent(QDragLeaveEvent* event) override;
@@ -360,6 +362,8 @@ private slots:
   void EmitColorAtCursor(QMouseEvent* e);
 
   void UpdateFromQueue();
+
+  void TextEditChanged();
 
 };
 

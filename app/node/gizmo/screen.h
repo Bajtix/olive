@@ -31,8 +31,6 @@ class ScreenGizmo : public DraggableGizmo
 public:
   explicit ScreenGizmo(QObject *parent = nullptr);
 
-  virtual void Draw(QPainter *p) const{}
-
 };
 
 }
