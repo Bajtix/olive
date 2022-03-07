@@ -51,6 +51,7 @@ void ViewerTextEditor::ConnectToolBar(ViewerTextEditorToolBar *toolbar)
 
   connect(toolbar, &ViewerTextEditorToolBar::FamilyChanged, this, &ViewerTextEditor::SetFamily);
   connect(toolbar, &ViewerTextEditorToolBar::SizeChanged, this, &QTextEdit::setFontPointSize);
+  connect(toolbar, &ViewerTextEditorToolBar::StyleChanged, this, &ViewerTextEditor::SetStyle);
   connect(toolbar, &ViewerTextEditorToolBar::ItalicChanged, this, &QTextEdit::setFontItalic);
   connect(toolbar, &ViewerTextEditorToolBar::UnderlineChanged, this, &QTextEdit::setFontUnderline);
   connect(toolbar, &ViewerTextEditorToolBar::AlignmentChanged, this, [this](Qt::Alignment a){
@@ -76,8 +77,28 @@ void ViewerTextEditor::keyPressEvent(QKeyEvent *event)
 
 void ViewerTextEditor::UpdateToolBar(ViewerTextEditorToolBar *toolbar, const QTextCharFormat &f, Qt::Alignment alignment)
 {
-  toolbar->SetFontFamily(f.fontFamily());
+  QFontDatabase fd;
+
+  QString family = f.fontFamily();
+  if (family.isEmpty()) {
+    family = qApp->font().family();
+  }
+
+  QString style = f.fontStyleName().toString();
+  if (style.isEmpty()) {
+    QStringList styles = fd.styles(family);
+    foreach (const QString &s, styles) {
+      QFont test = fd.font(family, s, f.fontPointSize());
+      if (test.weight() == f.fontWeight() && test.italic() == f.fontItalic()) {
+        style = s;
+        break;
+      }
+    }
+  }
+
+  toolbar->SetFontFamily(family);
   toolbar->SetFontSize(f.fontPointSize());
+  toolbar->SetStyle(style);
   toolbar->SetItalic(f.fontItalic());
   toolbar->SetUnderline(f.fontUnderline());
   toolbar->SetAlignment(alignment);
@@ -124,6 +145,20 @@ void ViewerTextEditor::SetFamily(const QString &s)
   mergeCurrentCharFormat(f);
 }
 
+void ViewerTextEditor::SetStyle(const QString &s)
+{
+  ViewerTextEditorToolBar *toolbar = static_cast<ViewerTextEditorToolBar *>(sender());
+
+  QTextCharFormat f;
+
+  QFontDatabase fd;
+  QFont test = fd.font(toolbar->GetFontFamily(), s, currentCharFormat().fontPointSize());
+  f.setFontWeight(test.weight());
+  f.setFontItalic(test.italic());
+
+  mergeCurrentCharFormat(f);
+}
+
 ViewerTextEditorToolBar::ViewerTextEditorToolBar(QWidget *parent) :
   QWidget(parent)
 {
@@ -131,6 +166,7 @@ ViewerTextEditorToolBar::ViewerTextEditorToolBar(QWidget *parent) :
 
   font_combo_ = new QFontComboBox();
   connect(font_combo_, &QFontComboBox::currentTextChanged, this, &ViewerTextEditorToolBar::FamilyChanged);
+  connect(font_combo_, &QFontComboBox::currentTextChanged, this, &ViewerTextEditorToolBar::UpdateFontStyleList);
   layout->addWidget(font_combo_);
 
   font_sz_slider_ = new FloatSlider();
@@ -139,9 +175,9 @@ ViewerTextEditorToolBar::ViewerTextEditorToolBar(QWidget *parent) :
   font_sz_slider_->SetLadderElementCount(2);
   layout->addWidget(font_sz_slider_);
 
-  weight_combo_ = new QComboBox();
-  weight_combo_->addItem(tr("Normal"));
-  layout->addWidget(weight_combo_);
+  style_combo_ = new QComboBox();
+  connect(style_combo_, &QComboBox::currentTextChanged, this, &ViewerTextEditorToolBar::StyleChanged);
+  layout->addWidget(style_combo_);
 
   italic_btn_ = new QPushButton();
   connect(italic_btn_, &QPushButton::clicked, this, &ViewerTextEditorToolBar::ItalicChanged);
@@ -200,6 +236,17 @@ void ViewerTextEditorToolBar::SetAlignment(Qt::Alignment a)
 void ViewerTextEditorToolBar::closeEvent(QCloseEvent *event)
 {
   event->ignore();
+}
+
+void ViewerTextEditorToolBar::UpdateFontStyleList(const QString &family)
+{
+  style_combo_->blockSignals(true);
+  style_combo_->clear();
+  QStringList l = QFontDatabase().styles(family);
+  foreach (const QString &style, l) {
+    style_combo_->addItem(style);
+  }
+  style_combo_->blockSignals(false);
 }
 
 void ViewerTextEditorToolBar::mousePressEvent(QMouseEvent *event)

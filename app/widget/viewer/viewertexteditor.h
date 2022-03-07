@@ -22,6 +22,7 @@
 #define VIEWERTEXTEDITOR_H
 
 #include <QApplication>
+#include <QDebug>
 #include <QFontComboBox>
 #include <QTextEdit>
 #include <QPushButton>
@@ -36,12 +37,25 @@ class ViewerTextEditorToolBar : public QWidget
 public:
   ViewerTextEditorToolBar(QWidget *parent = nullptr);
 
+  QString GetFontFamily() const
+  {
+    return font_combo_->currentText();
+  }
+
 public slots:
-  void SetFontFamily(const QString &s)
+  void SetFontFamily(QString s)
   {
     font_combo_->blockSignals(true);
-    font_combo_->setCurrentFont(s.isEmpty() ? qApp->font().family() : s);
+    font_combo_->setCurrentFont(s);
+    UpdateFontStyleList(s);
     font_combo_->blockSignals(false);
+  }
+
+  void SetStyle(QString style)
+  {
+    style_combo_->blockSignals(true);
+    style_combo_->setCurrentText(style);
+    style_combo_->blockSignals(false);
   }
 
   void SetFontSize(double d) { font_sz_slider_->SetValue(d); }
@@ -52,6 +66,7 @@ public slots:
 signals:
   void FamilyChanged(const QString &s);
   void SizeChanged(double d);
+  void StyleChanged(const QString &s);
   void ItalicChanged(bool e);
   void UnderlineChanged(bool e);
   void AlignmentChanged(Qt::Alignment alignment);
@@ -72,7 +87,7 @@ private:
 
   FloatSlider *font_sz_slider_;
 
-  QComboBox *weight_combo_;
+  QComboBox *style_combo_;
 
   QPushButton *italic_btn_;
 
@@ -84,6 +99,9 @@ private:
   QPushButton *align_justify_btn_;
 
   QPushButton *color_btn_;
+
+private slots:
+  void UpdateFontStyleList(const QString &family);
 
 };
 
@@ -109,6 +127,8 @@ private slots:
   void FormatChanged(const QTextCharFormat &f);
 
   void SetFamily(const QString &s);
+
+  void SetStyle(const QString &s);
 
 };
 
