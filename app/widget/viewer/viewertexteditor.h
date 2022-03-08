@@ -59,17 +59,23 @@ public slots:
   }
 
   void SetFontSize(double d) { font_sz_slider_->SetValue(d); }
+  void SetBold(bool e) { bold_btn_->setChecked(e); }
   void SetItalic(bool e) { italic_btn_->setChecked(e); }
   void SetUnderline(bool e) { underline_btn_->setChecked(e); }
+  void SetStrikethrough(bool e) { strikethrough_btn_->setChecked(e); }
   void SetAlignment(Qt::Alignment a);
+  void SetColor(const QColor &c);
 
 signals:
   void FamilyChanged(const QString &s);
   void SizeChanged(double d);
   void StyleChanged(const QString &s);
+  void BoldChanged(bool e);
   void ItalicChanged(bool e);
   void UnderlineChanged(bool e);
+  void StrikethroughChanged(bool e);
   void AlignmentChanged(Qt::Alignment alignment);
+  void ColorChanged(const QColor &c);
 
   void FirstPaint();
 
@@ -93,9 +99,10 @@ private:
 
   QComboBox *style_combo_;
 
+  QPushButton *bold_btn_;
   QPushButton *italic_btn_;
-
   QPushButton *underline_btn_;
+  QPushButton *strikethrough_btn_;
 
   QPushButton *align_left_btn_;
   QPushButton *align_center_btn_;
@@ -115,17 +122,21 @@ class ViewerTextEditor : public QTextEdit
 {
   Q_OBJECT
 public:
-  ViewerTextEditor(QWidget *parent = nullptr);
+  ViewerTextEditor(double scale, QWidget *parent = nullptr);
 
   void ConnectToolBar(ViewerTextEditorToolBar *toolbar);
 
 protected:
   virtual void keyPressEvent(QKeyEvent *event) override;
 
+  virtual int metric(PaintDeviceMetric metric) const override;
+
 private:
   static void UpdateToolBar(ViewerTextEditorToolBar *toolbar, const QTextCharFormat &f, Qt::Alignment alignment);
 
   QVector<ViewerTextEditorToolBar *> toolbars_;
+
+  double scale_;
 
 private slots:
   void FocusChanged(QWidget *old, QWidget *now);
@@ -135,6 +146,10 @@ private slots:
   void SetFamily(const QString &s);
 
   void SetStyle(const QString &s);
+
+  void SetFontBold(bool e);
+
+  void SetFontStrikethrough(bool e);
 
 };
 

@@ -24,7 +24,6 @@
 #include <QDateTime>
 #include <QTextDocument>
 
-#include "common/cpuoptimize.h"
 #include "common/functiontimer.h"
 
 namespace olive {
@@ -41,9 +40,8 @@ const QString TextGeneratorV3::kTextInput = QStringLiteral("text_in");
 
 TextGeneratorV3::TextGeneratorV3()
 {
-  AddInput(kTextInput, NodeValue::kText, QStringLiteral("<p style='font-size: 72pt;'>%1</p>").arg(tr("Sample Text")));
+  AddInput(kTextInput, NodeValue::kText, QStringLiteral("<p style='font-size: 72pt; color: white;'>%1</p>").arg(tr("Sample Text")));
 
-  SetStandardValue(kColorInput, QVariant::fromValue(Color(1.0f, 1.0f, 1.0)));
   SetStandardValue(kSizeInput, QVector2D(400, 300));
 
   text_gizmo_ = new TextGizmo(this);
@@ -82,7 +80,7 @@ void TextGeneratorV3::Value(const NodeValueRow &value, const NodeGlobals &global
   GenerateJob job;
   job.InsertValue(value);
   job.SetAlphaChannelRequired(GenerateJob::kAlphaForceOn);
-  job.SetRequestedFormat(VideoParams::kFormatFloat32);
+  job.SetRequestedFormat(VideoParams::kFormatUnsigned8);
 
   if (!job.GetValue(kTextInput).data().toString().isEmpty()) {
     table->Push(NodeValue::kGenerateJob, QVariant::fromValue(job), this);
@@ -91,11 +89,7 @@ void TextGeneratorV3::Value(const NodeValueRow &value, const NodeGlobals &global
 
 void TextGeneratorV3::GenerateFrame(FramePtr frame, const GenerateJob& job) const
 {
-  // This could probably be more optimized, but for now we use Qt to draw to a QImage.
-  // QImages only support integer pixels and we use float pixels, so what we do here is draw onto
-  // a single-channel QImage (alpha only) and then transplant that alpha channel to our float buffer
-  // with correct float RGB.
-  QImage img(frame->width(), frame->height(), QImage::Format_Grayscale8);
+  QImage img(reinterpret_cast<uchar*>(frame->data()), frame->width(), frame->height(), frame->linesize_bytes(), QImage::Format_RGBA8888_Premultiplied);
   img.fill(Qt::transparent);
 
   // 96 DPI in DPM (96 / 2.54 * 100)
@@ -126,33 +120,7 @@ void TextGeneratorV3::GenerateFrame(FramePtr frame, const GenerateJob& job) cons
 
   text_doc.documentLayout()->draw(&p, ctx);
 
-  // Transplant alpha channel to frame
-  Color rgba = job.GetValue(kColorInput).data().value<Color>();
-#if defined(Q_PROCESSOR_X86) || defined(Q_PROCESSOR_ARM)
-  __m128 sse_color = _mm_loadu_ps(rgba.data());
-#endif
-
-  float *frame_dst = reinterpret_cast<float*>(frame->data());
-  for (int y=0; y<frame->height(); y++) {
-    uchar *src_y = img.bits() + img.bytesPerLine() * y;
-    float *dst_y = frame_dst + y*frame->linesize_pixels()*VideoParams::kRGBAChannelCount;
-
-    for (int x=0; x<frame->width(); x++) {
-      float alpha = float(src_y[x]) / 255.0f;
-      float *dst = dst_y + x*VideoParams::kRGBAChannelCount;
-
-#if defined(Q_PROCESSOR_X86) || defined(Q_PROCESSOR_ARM)
-      __m128 sse_alpha = _mm_load1_ps(&alpha);
-      __m128 sse_res = _mm_mul_ps(sse_color, sse_alpha);
-
-      _mm_store_ps(dst, sse_res);
-#else
-      for (int i=0; i<VideoParams::kRGBAChannelCount; i++) {
-        dst[i] = rgba.data()[i] * alpha;
-      }
-#endif
-    }
-  }
+  // FIXME: Convert to scene linear
 }
 
 void TextGeneratorV3::UpdateGizmoPositions(const NodeValueRow &row, const NodeGlobals &globals)

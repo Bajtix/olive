@@ -65,6 +65,7 @@ QIcon icon::TriUp;
 QIcon icon::TriLeft;
 QIcon icon::TriDown;
 QIcon icon::TriRight;
+QIcon icon::TextBold;
 QIcon icon::TextItalic;
 QIcon icon::TextUnderline;
 QIcon icon::TextAlignLeft;
@@ -125,6 +126,7 @@ void icon::LoadAll(const QString& theme)
   TriDown = Create(theme, "tri-down");
   TriRight = Create(theme, "tri-right");
 
+  TextBold = Create(theme, "text-bold");
   TextItalic = Create(theme, "text-italic");
   TextUnderline = Create(theme, "text-underline");
   TextAlignLeft = Create(theme, "align-left");

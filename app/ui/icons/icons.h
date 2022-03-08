@@ -75,6 +75,7 @@ extern QIcon TriDown;
 extern QIcon TriRight;
 
 // Text
+extern QIcon TextBold;
 extern QIcon TextItalic;
 extern QIcon TextUnderline;
 extern QIcon TextAlignLeft;

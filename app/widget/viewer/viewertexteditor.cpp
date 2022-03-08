@@ -20,6 +20,8 @@
 
 #include "viewertexteditor.h"
 
+#include <QAbstractTextDocumentLayout>
+#include <QColorDialog>
 #include <QKeyEvent>
 #include <QHBoxLayout>
 #include <QScrollBar>
@@ -32,7 +34,7 @@ namespace olive {
 
 #define super QTextEdit
 
-ViewerTextEditor::ViewerTextEditor(QWidget *parent) :
+ViewerTextEditor::ViewerTextEditor(double scale, QWidget *parent) :
   super(parent)
 {
   viewport()->setAutoFillBackground(false);
@@ -40,6 +42,14 @@ ViewerTextEditor::ViewerTextEditor(QWidget *parent) :
   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   horizontalScrollBar()->setEnabled(false);
   verticalScrollBar()->setEnabled(false);
+
+  QImage *image = new QImage(1, 1, QImage::Format_RGBA8888_Premultiplied);
+
+  // Force DPI to the same one that we're using in the actual render
+  const int dpm = 3780 * scale;
+  image->setDotsPerMeterX(dpm);
+  image->setDotsPerMeterY(dpm);
+  document()->documentLayout()->setPaintDevice(image);
 
   connect(qApp, &QApplication::focusChanged, this, &ViewerTextEditor::FocusChanged);
   connect(this, &QTextEdit::currentCharFormatChanged, this, &ViewerTextEditor::FormatChanged);
@@ -52,8 +62,11 @@ void ViewerTextEditor::ConnectToolBar(ViewerTextEditorToolBar *toolbar)
   connect(toolbar, &ViewerTextEditorToolBar::FamilyChanged, this, &ViewerTextEditor::SetFamily);
   connect(toolbar, &ViewerTextEditorToolBar::SizeChanged, this, &QTextEdit::setFontPointSize);
   connect(toolbar, &ViewerTextEditorToolBar::StyleChanged, this, &ViewerTextEditor::SetStyle);
+  connect(toolbar, &ViewerTextEditorToolBar::BoldChanged, this, &ViewerTextEditor::SetFontBold);
   connect(toolbar, &ViewerTextEditorToolBar::ItalicChanged, this, &QTextEdit::setFontItalic);
   connect(toolbar, &ViewerTextEditorToolBar::UnderlineChanged, this, &QTextEdit::setFontUnderline);
+  connect(toolbar, &ViewerTextEditorToolBar::StrikethroughChanged, this, &ViewerTextEditor::SetFontStrikethrough);
+  connect(toolbar, &ViewerTextEditorToolBar::ColorChanged, this, &QTextEdit::setTextColor);
   connect(toolbar, &ViewerTextEditorToolBar::AlignmentChanged, this, [this](Qt::Alignment a){
     this->setAlignment(a);
 
@@ -71,8 +84,20 @@ void ViewerTextEditor::keyPressEvent(QKeyEvent *event)
   super::keyPressEvent(event);
 
   if (event->key() == Qt::Key_Escape) {
-    clearFocus();
+    deleteLater();
   }
+}
+
+int ViewerTextEditor::metric(PaintDeviceMetric metric) const
+{
+  int m = super::metric(metric);
+
+  if (metric == PdmDpiX || metric == PdmDpiY) {
+    //qDebug() << "Returned" << 48 << "for" << metric;
+    //return 48;
+  }
+
+  return m;
 }
 
 void ViewerTextEditor::UpdateToolBar(ViewerTextEditorToolBar *toolbar, const QTextCharFormat &f, Qt::Alignment alignment)
@@ -99,9 +124,12 @@ void ViewerTextEditor::UpdateToolBar(ViewerTextEditorToolBar *toolbar, const QTe
   toolbar->SetFontFamily(family);
   toolbar->SetFontSize(f.fontPointSize());
   toolbar->SetStyle(style);
+  toolbar->SetBold(fd.bold(family, style));
   toolbar->SetItalic(f.fontItalic());
   toolbar->SetUnderline(f.fontUnderline());
+  toolbar->SetStrikethrough(f.fontStrikeOut());
   toolbar->SetAlignment(alignment);
+  toolbar->SetColor(f.foreground().color());
 }
 
 void ViewerTextEditor::FocusChanged(QWidget *old, QWidget *now)
@@ -159,6 +187,20 @@ void ViewerTextEditor::SetStyle(const QString &s)
   mergeCurrentCharFormat(f);
 }
 
+void ViewerTextEditor::SetFontBold(bool e)
+{
+  QTextCharFormat f;
+  f.setFontWeight(e ? QFont::Bold : QFont::Normal);
+  mergeCurrentCharFormat(f);
+}
+
+void ViewerTextEditor::SetFontStrikethrough(bool e)
+{
+  QTextCharFormat f;
+  f.setFontStrikeOut(e);
+  mergeCurrentCharFormat(f);
+}
+
 ViewerTextEditorToolBar::ViewerTextEditorToolBar(QWidget *parent) :
   QWidget(parent),
   painted_(false)
@@ -171,7 +213,10 @@ ViewerTextEditorToolBar::ViewerTextEditorToolBar(QWidget *parent) :
   layout->addWidget(font_combo_);
 
   font_sz_slider_ = new FloatSlider();
-  font_sz_slider_->SetMinimum(0);
+  font_sz_slider_->SetMinimum(0.1);
+  font_sz_slider_->SetMaximum(9999.9);
+  font_sz_slider_->SetDecimalPlaces(1);
+  font_sz_slider_->setFixedWidth(font_sz_slider_->fontMetrics().horizontalAdvance(QStringLiteral("9999.9")));
   connect(font_sz_slider_, &FloatSlider::ValueChanged, this, &ViewerTextEditorToolBar::SizeChanged);
   font_sz_slider_->SetLadderElementCount(2);
   layout->addWidget(font_sz_slider_);
@@ -179,6 +224,12 @@ ViewerTextEditorToolBar::ViewerTextEditorToolBar(QWidget *parent) :
   style_combo_ = new QComboBox();
   connect(style_combo_, &QComboBox::currentTextChanged, this, &ViewerTextEditorToolBar::StyleChanged);
   layout->addWidget(style_combo_);
+
+  bold_btn_ = new QPushButton();
+  connect(bold_btn_, &QPushButton::clicked, this, &ViewerTextEditorToolBar::BoldChanged);
+  bold_btn_->setCheckable(true);
+  bold_btn_->setIcon(icon::TextBold);
+  layout->addWidget(bold_btn_);
 
   italic_btn_ = new QPushButton();
   connect(italic_btn_, &QPushButton::clicked, this, &ViewerTextEditorToolBar::ItalicChanged);
@@ -191,6 +242,12 @@ ViewerTextEditorToolBar::ViewerTextEditorToolBar(QWidget *parent) :
   underline_btn_->setCheckable(true);
   underline_btn_->setIcon(icon::TextUnderline);
   layout->addWidget(underline_btn_);
+
+  strikethrough_btn_ = new QPushButton();
+  connect(strikethrough_btn_, &QPushButton::clicked, this, &ViewerTextEditorToolBar::StrikethroughChanged);
+  strikethrough_btn_->setCheckable(true);
+  strikethrough_btn_->setText(tr("S")); // FIXME: Source icon
+  layout->addWidget(strikethrough_btn_);
 
   layout->addWidget(QtUtils::CreateVerticalLine());
 
@@ -220,7 +277,18 @@ ViewerTextEditorToolBar::ViewerTextEditorToolBar(QWidget *parent) :
 
   layout->addWidget(QtUtils::CreateVerticalLine());
 
-  color_btn_ = new QPushButton(tr("Color"));
+  color_btn_ = new QPushButton();
+  color_btn_->setAutoFillBackground(true);
+  connect(color_btn_, &QPushButton::clicked, this, [this]{
+    QColor c = color_btn_->property("color").value<QColor>();
+
+    QColorDialog cd(this);
+    if (cd.exec() == QDialog::Accepted) {
+      c = cd.selectedColor();
+      SetColor(c);
+      emit ColorChanged(c);
+    }
+  });
   layout->addWidget(color_btn_);
 
   setAutoFillBackground(true);
@@ -232,6 +300,12 @@ void ViewerTextEditorToolBar::SetAlignment(Qt::Alignment a)
   align_center_btn_->setChecked(a == Qt::AlignCenter);
   align_right_btn_->setChecked(a == Qt::AlignRight);
   align_justify_btn_->setChecked(a == Qt::AlignJustify);
+}
+
+void ViewerTextEditorToolBar::SetColor(const QColor &c)
+{
+  color_btn_->setProperty("color", c);
+  color_btn_->setStyleSheet(QStringLiteral("QPushButton { background: %1; }").arg(c.name()));
 }
 
 void ViewerTextEditorToolBar::closeEvent(QCloseEvent *event)

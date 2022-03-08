@@ -333,12 +333,14 @@ void ViewerDisplayWidget::mouseDoubleClickEvent(QMouseEvent *event)
     foreach (NodeGizmo *g, gizmos_->GetGizmos()) {
       if (TextGizmo *text = dynamic_cast<TextGizmo*>(g)) {
         if (text->GetRect().contains(ptr)) {
-          ViewerTextEditor *text_edit = new ViewerTextEditor(this);
+          QTransform gizmo_transform = GenerateGizmoTransform();
+
+          ViewerTextEditor *text_edit = new ViewerTextEditor(gizmo_transform.m11(), this);
           text_edit->setHtml(text->GetHtml());
           text_edit->setProperty("gizmo", reinterpret_cast<quintptr>(text));
           text_edit->moveCursor(QTextCursor::Start);
 
-          QRectF transformed_geom = GenerateGizmoTransform().map(text->GetRect()).boundingRect();
+          QRectF transformed_geom = gizmo_transform.map(text->GetRect()).boundingRect();
           text_edit->setGeometry(transformed_geom.toRect());
 
           ViewerTextEditorToolBar *toolbar = new ViewerTextEditorToolBar(this);
