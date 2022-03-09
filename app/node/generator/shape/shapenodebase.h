@@ -32,7 +32,7 @@ class ShapeNodeBase : public Node
 {
   Q_OBJECT
 public:
-  ShapeNodeBase();
+  ShapeNodeBase(bool create_color_input = true);
 
   NODE_DEFAULT_DESTRUCTOR(ShapeNodeBase)
 

@@ -39,7 +39,8 @@ enum TextVerticalAlign {
 
 const QString TextGeneratorV3::kTextInput = QStringLiteral("text_in");
 
-TextGeneratorV3::TextGeneratorV3()
+TextGeneratorV3::TextGeneratorV3() :
+  ShapeNodeBase(false)
 {
   AddInput(kTextInput, NodeValue::kText, QStringLiteral("<p style='font-size: 72pt; color: white;'>%1</p>").arg(tr("Sample Text")));
 
@@ -119,6 +120,7 @@ void TextGeneratorV3::GenerateFrame(FramePtr frame, const GenerateJob& job) cons
   p.translate(frame->video_params().width()/2, frame->video_params().height()/2);
   p.setClipRect(0, 0, size.x(), size.y());
 
+  // Ensure default text color is white
   QAbstractTextDocumentLayout::PaintContext ctx;
   ctx.palette.setColor(QPalette::Text, Qt::white);
 

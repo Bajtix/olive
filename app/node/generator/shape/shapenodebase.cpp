@@ -34,12 +34,15 @@ QString ShapeNodeBase::kPositionInput = QStringLiteral("pos_in");
 QString ShapeNodeBase::kSizeInput = QStringLiteral("size_in");
 QString ShapeNodeBase::kColorInput = QStringLiteral("color_in");
 
-ShapeNodeBase::ShapeNodeBase()
+ShapeNodeBase::ShapeNodeBase(bool create_color_input)
 {
   AddInput(kPositionInput, NodeValue::kVec2, QVector2D(0, 0));
   AddInput(kSizeInput, NodeValue::kVec2, QVector2D(100, 100));
   SetInputProperty(kSizeInput, QStringLiteral("min"), QVector2D(0, 0));
-  AddInput(kColorInput, NodeValue::kColor, QVariant::fromValue(Color(1.0, 0.0, 0.0, 1.0)));
+
+  if (create_color_input) {
+    AddInput(kColorInput, NodeValue::kColor, QVariant::fromValue(Color(1.0, 0.0, 0.0, 1.0)));
+  }
 
   // Initiate gizmos
   QVector<NodeKeyframeTrackReference> pos_n_sz = {
@@ -63,7 +66,10 @@ void ShapeNodeBase::Retranslate()
 
   SetInputName(kPositionInput, tr("Position"));
   SetInputName(kSizeInput, tr("Size"));
-  SetInputName(kColorInput, tr("Color"));
+
+  if (HasInputWithID(kColorInput)) {
+    SetInputName(kColorInput, tr("Color"));
+  }
 }
 
 void ShapeNodeBase::UpdateGizmoPositions(const NodeValueRow &row, const NodeGlobals &globals)
