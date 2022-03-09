@@ -25,6 +25,7 @@
 #include <QTextDocument>
 
 #include "common/functiontimer.h"
+#include "node/project/project.h"
 
 namespace olive {
 
@@ -82,6 +83,9 @@ void TextGeneratorV3::Value(const NodeValueRow &value, const NodeGlobals &global
   job.SetAlphaChannelRequired(GenerateJob::kAlphaForceOn);
   job.SetRequestedFormat(VideoParams::kFormatUnsigned8);
 
+  // FIXME: Provide user override for this
+  job.SetColorspace(project()->color_manager()->GetDefaultInputColorSpace());
+
   if (!job.GetValue(kTextInput).data().toString().isEmpty()) {
     table->Push(NodeValue::kGenerateJob, QVariant::fromValue(job), this);
   }
@@ -119,8 +123,6 @@ void TextGeneratorV3::GenerateFrame(FramePtr frame, const GenerateJob& job) cons
   ctx.palette.setColor(QPalette::Text, Qt::white);
 
   text_doc.documentLayout()->draw(&p, ctx);
-
-  // FIXME: Convert to scene linear
 }
 
 void TextGeneratorV3::UpdateGizmoPositions(const NodeValueRow &row, const NodeGlobals &globals)
