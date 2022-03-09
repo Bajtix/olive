@@ -28,6 +28,7 @@
 #include <QPushButton>
 
 #include "widget/slider/floatslider.h"
+#include "widget/slider/integerslider.h"
 
 namespace olive {
 
@@ -65,6 +66,9 @@ public slots:
   void SetStrikethrough(bool e) { strikethrough_btn_->setChecked(e); }
   void SetAlignment(Qt::Alignment a);
   void SetColor(const QColor &c);
+  void SetSmallCaps(bool e) { small_caps_btn_->setChecked(e); }
+  void SetStretch(int i) { stretch_slider_->SetValue(i); }
+  void SetKerning(int i) { kerning_slider_->SetValue(i); }
 
 signals:
   void FamilyChanged(const QString &s);
@@ -76,6 +80,9 @@ signals:
   void StrikethroughChanged(bool e);
   void AlignmentChanged(Qt::Alignment alignment);
   void ColorChanged(const QColor &c);
+  void SmallCapsChanged(bool e);
+  void StretchChanged(int i);
+  void KerningChanged(int i);
 
   void FirstPaint();
 
@@ -109,6 +116,10 @@ private:
   QPushButton *align_right_btn_;
   QPushButton *align_justify_btn_;
 
+  IntegerSlider *stretch_slider_;
+  IntegerSlider *kerning_slider_;
+  QPushButton *small_caps_btn_;
+
   QPushButton *color_btn_;
 
   bool painted_;
@@ -129,14 +140,12 @@ public:
 protected:
   virtual void keyPressEvent(QKeyEvent *event) override;
 
-  virtual int metric(PaintDeviceMetric metric) const override;
-
 private:
   static void UpdateToolBar(ViewerTextEditorToolBar *toolbar, const QTextCharFormat &f, Qt::Alignment alignment);
 
   QVector<ViewerTextEditorToolBar *> toolbars_;
 
-  double scale_;
+  QImage dpi_force_;
 
 private slots:
   void FocusChanged(QWidget *old, QWidget *now);
@@ -150,6 +159,12 @@ private slots:
   void SetFontBold(bool e);
 
   void SetFontStrikethrough(bool e);
+
+  void SetSmallCaps(bool e);
+
+  void SetFontStretch(int i);
+
+  void SetFontKerning(int i);
 
 };
 
