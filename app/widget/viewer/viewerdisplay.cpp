@@ -338,7 +338,6 @@ void ViewerDisplayWidget::mouseDoubleClickEvent(QMouseEvent *event)
           ViewerTextEditor *text_edit = new ViewerTextEditor(gizmo_transform.m11(), this);
           text_edit->setHtml(text->GetHtml());
           text_edit->setProperty("gizmo", reinterpret_cast<quintptr>(text));
-          text_edit->moveCursor(QTextCursor::Start);
 
           QRectF transformed_geom = gizmo_transform.map(text->GetRect()).boundingRect();
           text_edit->setGeometry(transformed_geom.toRect());
@@ -365,11 +364,17 @@ void ViewerDisplayWidget::mouseDoubleClickEvent(QMouseEvent *event)
 
           text_edit->ConnectToolBar(toolbar);
 
+          QPoint text_edit_pos = text_edit->mapFrom(this, event->pos());
+
           // Ensure text edit is actually focused rather than the toolbar
-          connect(toolbar, &ViewerTextEditorToolBar::FirstPaint, this, [this, text_edit]{
+          connect(toolbar, &ViewerTextEditorToolBar::FirstPaint, this, [this, text_edit, text_edit_pos]{
+            // Grab focus back from the toolbar
             this->raise();
             this->activateWindow();
             text_edit->setFocus();
+
+            // Start text cursor where the user clicked
+            text_edit->setTextCursor(text_edit->cursorForPosition(text_edit_pos));
           });
           break;
         }
