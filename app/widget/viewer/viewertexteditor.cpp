@@ -25,7 +25,6 @@
 #include <QKeyEvent>
 #include <QHBoxLayout>
 #include <QScrollBar>
-#include <QTextFrame>
 
 #include "common/qtutils.h"
 #include "ui/icons/icons.h"
@@ -36,7 +35,8 @@ namespace olive {
 #define super QTextEdit
 
 ViewerTextEditor::ViewerTextEditor(double scale, QWidget *parent) :
-  super(parent)
+  super(parent),
+  transparent_clone_(nullptr)
 {
   // Ensure default text color is white
   QPalette p = palette();
@@ -48,8 +48,8 @@ ViewerTextEditor::ViewerTextEditor(double scale, QWidget *parent) :
   viewport()->setAutoFillBackground(false);
   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  horizontalScrollBar()->setEnabled(false);
-  verticalScrollBar()->setEnabled(false);
+  connect(horizontalScrollBar(), &QScrollBar::rangeChanged, this, &ViewerTextEditor::LockScrollBarMaximumToZero);
+  connect(verticalScrollBar(), &QScrollBar::rangeChanged, this, &ViewerTextEditor::LockScrollBarMaximumToZero);
 
   // Force DPI to the same one that we're using in the actual render
   dpi_force_ = QImage(1, 1, QImage::Format_RGBA8888_Premultiplied);
@@ -61,6 +61,7 @@ ViewerTextEditor::ViewerTextEditor(double scale, QWidget *parent) :
 
   connect(qApp, &QApplication::focusChanged, this, &ViewerTextEditor::FocusChanged);
   connect(this, &QTextEdit::currentCharFormatChanged, this, &ViewerTextEditor::FormatChanged);
+  connect(document(), &QTextDocument::contentsChanged, this, &ViewerTextEditor::DocumentChanged, Qt::QueuedConnection);
 }
 
 void ViewerTextEditor::ConnectToolBar(ViewerTextEditorToolBar *toolbar)
@@ -78,6 +79,7 @@ void ViewerTextEditor::ConnectToolBar(ViewerTextEditorToolBar *toolbar)
   connect(toolbar, &ViewerTextEditorToolBar::SmallCapsChanged, this, &ViewerTextEditor::SetSmallCaps);
   connect(toolbar, &ViewerTextEditorToolBar::StretchChanged, this, &ViewerTextEditor::SetFontStretch);
   connect(toolbar, &ViewerTextEditorToolBar::KerningChanged, this, &ViewerTextEditor::SetFontKerning);
+  connect(toolbar, &ViewerTextEditorToolBar::LineHeightChanged, this, &ViewerTextEditor::SetLineHeight);
   connect(toolbar, &ViewerTextEditorToolBar::AlignmentChanged, this, [this](Qt::Alignment a){
     this->setAlignment(a);
 
@@ -85,7 +87,7 @@ void ViewerTextEditor::ConnectToolBar(ViewerTextEditorToolBar *toolbar)
     static_cast<ViewerTextEditorToolBar*>(sender())->SetAlignment(a);
   });
 
-  UpdateToolBar(toolbar, this->currentCharFormat(), this->alignment());
+  UpdateToolBar(toolbar, this->currentCharFormat(), this->textCursor().blockFormat(), this->alignment());
 
   toolbars_.append(toolbar);
 }
@@ -99,7 +101,41 @@ void ViewerTextEditor::keyPressEvent(QKeyEvent *event)
   }
 }
 
-void ViewerTextEditor::UpdateToolBar(ViewerTextEditorToolBar *toolbar, const QTextCharFormat &f, Qt::Alignment alignment)
+void ViewerTextEditor::paintEvent(QPaintEvent *e)
+{
+  QPainter p(this->viewport());
+
+  QAbstractTextDocumentLayout::PaintContext ctx;
+
+  QRect r = e->rect();
+  if (r.isValid())
+    p.setClipRect(r, Qt::IntersectClip);
+  ctx.clip = r;
+
+  ctx.cursorPosition = this->textCursor().position();
+
+  if (this->textCursor().hasSelection()) {
+    QAbstractTextDocumentLayout::Selection selection;
+    selection.cursor = this->textCursor();
+
+    QPalette::ColorGroup cg = this->hasFocus() ? QPalette::Active : QPalette::Inactive;
+    QBrush b = ctx.palette.brush(cg, QPalette::Highlight);
+    QColor bc = b.color();
+    bc.setAlpha(128);
+    b.setColor(bc);
+    selection.format.setBackground(b);
+    QStyleOption opt;
+    opt.initFrom(this);
+    if (this->style()->styleHint(QStyle::SH_RichText_FullWidthSelection, &opt, this)) {
+      selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+    }
+    ctx.selections.append(selection);
+  }
+
+  transparent_clone_->documentLayout()->draw(&p, ctx);
+}
+
+void ViewerTextEditor::UpdateToolBar(ViewerTextEditorToolBar *toolbar, const QTextCharFormat &f, const QTextBlockFormat &b, Qt::Alignment alignment)
 {
   QFontDatabase fd;
 
@@ -113,7 +149,7 @@ void ViewerTextEditor::UpdateToolBar(ViewerTextEditorToolBar *toolbar, const QTe
     QStringList styles = fd.styles(family);
     foreach (const QString &s, styles) {
       QFont test = fd.font(family, s, f.fontPointSize());
-      if (test.weight() == f.fontWeight() && test.italic() == f.fontItalic()) {
+      if (test.weight() == f.fontWeight() && test.italic() == f.fontItalic() && test.stretch() == f.fontStretch()) {
         style = s;
         break;
       }
@@ -131,7 +167,8 @@ void ViewerTextEditor::UpdateToolBar(ViewerTextEditorToolBar *toolbar, const QTe
   toolbar->SetColor(f.foreground().color());
   toolbar->SetSmallCaps(f.fontCapitalization() == QFont::SmallCaps);
   toolbar->SetStretch(f.fontStretch() == 0 ? 100 : f.fontStretch());
-  toolbar->SetKerning(f.fontLetterSpacing() == 0 ? 100 : f.fontLetterSpacing());
+  toolbar->SetKerning(f.fontLetterSpacing() == 0.0 ? 100 : f.fontLetterSpacing());
+  toolbar->SetLineHeight(b.lineHeight() == 0.0 ? 100 : b.lineHeight());
 }
 
 void ViewerTextEditor::FocusChanged(QWidget *old, QWidget *now)
@@ -161,7 +198,7 @@ void ViewerTextEditor::FocusChanged(QWidget *old, QWidget *now)
 void ViewerTextEditor::FormatChanged(const QTextCharFormat &f)
 {
   foreach (ViewerTextEditorToolBar *toolbar, toolbars_) {
-    UpdateToolBar(toolbar, f, this->alignment());
+    UpdateToolBar(toolbar, f, textCursor().blockFormat(), this->alignment());
   }
 }
 
@@ -182,9 +219,7 @@ void ViewerTextEditor::SetStyle(const QString &s)
   QTextCharFormat f;
 
   QFontDatabase fd;
-  QFont test = fd.font(toolbar->GetFontFamily(), s, currentCharFormat().fontPointSize());
-  f.setFontWeight(test.weight());
-  f.setFontItalic(test.italic());
+  f.setFont(fd.font(toolbar->GetFontFamily(), s, currentCharFormat().fontPointSize()));
 
   mergeCurrentCharFormat(f);
 }
@@ -217,11 +252,46 @@ void ViewerTextEditor::SetFontStretch(int i)
   mergeCurrentCharFormat(f);
 }
 
-void ViewerTextEditor::SetFontKerning(int i)
+void ViewerTextEditor::SetFontKerning(qreal i)
 {
   QTextCharFormat f;
   f.setFontLetterSpacing(i);
   mergeCurrentCharFormat(f);
+}
+
+void ViewerTextEditor::SetLineHeight(qreal i)
+{
+  QTextBlockFormat f = this->textCursor().blockFormat();
+  f.setLineHeight(i, QTextBlockFormat::ProportionalHeight);
+  this->textCursor().setBlockFormat(f);
+}
+
+void ViewerTextEditor::LockScrollBarMaximumToZero()
+{
+  static_cast<QScrollBar*>(sender())->setMaximum(0);
+}
+
+void ViewerTextEditor::DocumentChanged()
+{
+  // HACK: We want to show the text cursor and selections without necessarily rendering the text,
+  //       because the text is already being rendered underneath the gizmo (and rendering twice will
+  //       alter the overall look of the text while editing). This is something that Qt does not
+  //       support by default, and while it could be solved by subclassing QAbstractTextDocumentLayout,
+  //       this seems like overkill since 99% of QTextDocumentLayout's (the subclass used by default)
+  //       functionality and would need to be fully implemented ourselves. So instead, we clone the
+  //       document, set all of its colors to rgba(0,0,0,0) to make them transparent, and draw that
+  //       document instead. The result is cursor and selections being rendered without the text.
+  //       While this isn't the fastest code, nor is it the cleanest solution, it definitely works.
+  delete transparent_clone_;
+  transparent_clone_ = document()->clone(this);
+  transparent_clone_->documentLayout()->setPaintDevice(&dpi_force_);
+
+  QTextCursor cursor(transparent_clone_);
+  cursor.select(QTextCursor::Document);
+
+  QTextCharFormat fmt;
+  fmt.setForeground(QColor(0, 0, 0, 0));
+  cursor.mergeCharFormat(fmt);
 }
 
 ViewerTextEditorToolBar::ViewerTextEditorToolBar(QWidget *parent) :
@@ -229,11 +299,12 @@ ViewerTextEditorToolBar::ViewerTextEditorToolBar(QWidget *parent) :
   painted_(false)
 {
   QVBoxLayout *outer_layout = new QVBoxLayout(this);
-  outer_layout->setMargin(0);
   outer_layout->setSpacing(0);
 
   QHBoxLayout *basic_layout = new QHBoxLayout();
   outer_layout->addLayout(basic_layout);
+
+  int advanced_slider_width = QtUtils::QFontMetricsWidth(fontMetrics(), QStringLiteral("9999.9"));
 
   font_combo_ = new QFontComboBox();
   connect(font_combo_, &QFontComboBox::currentTextChanged, this, &ViewerTextEditorToolBar::FamilyChanged);
@@ -245,7 +316,7 @@ ViewerTextEditorToolBar::ViewerTextEditorToolBar(QWidget *parent) :
   font_sz_slider_->SetMaximum(9999.9);
   font_sz_slider_->SetDecimalPlaces(1);
   font_sz_slider_->SetAlignment(Qt::AlignCenter);
-  font_sz_slider_->setFixedWidth(QtUtils::QFontMetricsWidth(font_sz_slider_->fontMetrics(), QStringLiteral("9999.9")));
+  font_sz_slider_->setFixedWidth(advanced_slider_width);
   connect(font_sz_slider_, &FloatSlider::ValueChanged, this, &ViewerTextEditorToolBar::SizeChanged);
   font_sz_slider_->SetLadderElementCount(2);
   basic_layout->addWidget(font_sz_slider_);
@@ -325,23 +396,34 @@ ViewerTextEditorToolBar::ViewerTextEditorToolBar(QWidget *parent) :
   QHBoxLayout *advanced_layout = new QHBoxLayout();
   outer_layout->addLayout(advanced_layout);
 
-  advanced_layout->addWidget(new QLabel(tr("Stretch:"))); // FIXME: Procure icon
+  advanced_layout->addWidget(new QLabel(tr("Stretch: "))); // FIXME: Procure icon
 
   stretch_slider_ = new IntegerSlider();
   stretch_slider_->SetMinimum(0);
   stretch_slider_->SetDefaultValue(100);
-  stretch_slider_->setFixedWidth(QtUtils::QFontMetricsWidth(stretch_slider_->fontMetrics(), QStringLiteral("9999")));
+  stretch_slider_->setFixedWidth(advanced_slider_width);
   connect(stretch_slider_, &IntegerSlider::ValueChanged, this, &ViewerTextEditorToolBar::StretchChanged);
   advanced_layout->addWidget(stretch_slider_);
 
-  advanced_layout->addWidget(new QLabel(tr("Kerning:"))); // FIXME: Procure icon
+  advanced_layout->addWidget(new QLabel(tr("Kerning: "))); // FIXME: Procure icon
 
-  kerning_slider_ = new IntegerSlider();
+  kerning_slider_ = new FloatSlider();
   kerning_slider_->SetMinimum(0);
   kerning_slider_->SetDefaultValue(100);
-  kerning_slider_->setFixedWidth(QtUtils::QFontMetricsWidth(kerning_slider_->fontMetrics(), QStringLiteral("9999")));
-  connect(kerning_slider_, &IntegerSlider::ValueChanged, this, &ViewerTextEditorToolBar::KerningChanged);
+  kerning_slider_->SetDecimalPlaces(1);
+  kerning_slider_->setFixedWidth(advanced_slider_width);
+  connect(kerning_slider_, &FloatSlider::ValueChanged, this, &ViewerTextEditorToolBar::KerningChanged);
   advanced_layout->addWidget(kerning_slider_);
+
+  advanced_layout->addWidget(new QLabel(tr("Line Height: "))); // FIXME: Procure icon
+
+  line_height_slider_ = new FloatSlider();
+  line_height_slider_->SetMinimum(0);
+  line_height_slider_->SetDefaultValue(100);
+  line_height_slider_->SetDecimalPlaces(1);
+  line_height_slider_->setFixedWidth(advanced_slider_width);
+  connect(line_height_slider_, &FloatSlider::ValueChanged, this, &ViewerTextEditorToolBar::LineHeightChanged);
+  advanced_layout->addWidget(line_height_slider_);
 
   small_caps_btn_ = new QPushButton(tr("Small Caps")); // FIXME: Procure icon
   small_caps_btn_->setCheckable(true);

@@ -68,7 +68,8 @@ public slots:
   void SetColor(const QColor &c);
   void SetSmallCaps(bool e) { small_caps_btn_->setChecked(e); }
   void SetStretch(int i) { stretch_slider_->SetValue(i); }
-  void SetKerning(int i) { kerning_slider_->SetValue(i); }
+  void SetKerning(qreal i) { kerning_slider_->SetValue(i); }
+  void SetLineHeight(qreal i) { line_height_slider_->SetValue(i); }
 
 signals:
   void FamilyChanged(const QString &s);
@@ -82,7 +83,8 @@ signals:
   void ColorChanged(const QColor &c);
   void SmallCapsChanged(bool e);
   void StretchChanged(int i);
-  void KerningChanged(int i);
+  void KerningChanged(qreal i);
+  void LineHeightChanged(qreal i);
 
   void FirstPaint();
 
@@ -117,7 +119,8 @@ private:
   QPushButton *align_justify_btn_;
 
   IntegerSlider *stretch_slider_;
-  IntegerSlider *kerning_slider_;
+  FloatSlider *kerning_slider_;
+  FloatSlider *line_height_slider_;
   QPushButton *small_caps_btn_;
 
   QPushButton *color_btn_;
@@ -140,12 +143,16 @@ public:
 protected:
   virtual void keyPressEvent(QKeyEvent *event) override;
 
+  virtual void paintEvent(QPaintEvent *event) override;
+
 private:
-  static void UpdateToolBar(ViewerTextEditorToolBar *toolbar, const QTextCharFormat &f, Qt::Alignment alignment);
+  static void UpdateToolBar(ViewerTextEditorToolBar *toolbar, const QTextCharFormat &f, const QTextBlockFormat &b, Qt::Alignment alignment);
 
   QVector<ViewerTextEditorToolBar *> toolbars_;
 
   QImage dpi_force_;
+
+  QTextDocument *transparent_clone_;
 
 private slots:
   void FocusChanged(QWidget *old, QWidget *now);
@@ -164,7 +171,13 @@ private slots:
 
   void SetFontStretch(int i);
 
-  void SetFontKerning(int i);
+  void SetFontKerning(qreal i);
+
+  void SetLineHeight(qreal i);
+
+  void LockScrollBarMaximumToZero();
+
+  void DocumentChanged();
 
 };
 
