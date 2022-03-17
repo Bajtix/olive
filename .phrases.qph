@@ -1,0 +1,33 @@
+<!DOCTYPE QPH>
+<QPH sourcelanguage="en_US" language="pl_PL">
+<phrase>
+    <source>Olive may not have permission to this directory.</source>
+    <target>Olive może nie posiadać uprawnień dostępu do tego folderu.</target>
+</phrase>
+<phrase>
+    <source>Load</source>
+    <target>Wczytaj</target>
+</phrase>
+<phrase>
+    <source>Save</source>
+    <target>Zapisz</target>
+</phrase>
+<phrase>
+    <source>Cancel</source>
+    <target>Anuluj</target>
+</phrase>
+<phrase>
+    <source>Error</source>
+    <target>Błąd</target>
+</phrase>
+<phrase>
+    <source>Node</source>
+    <target>Blok</target>
+    <definition>Blok makes sense in the context of a node-block thing</definition>
+</phrase>
+<phrase>
+    <source>Playhead</source>
+    <target>Obecny czas</target>
+    <definition>this is not the best translation, but it&apos;s the simplest to understand. Literally &apos;current time&apos;</definition>
+</phrase>
+</QPH>
