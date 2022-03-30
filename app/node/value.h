@@ -25,6 +25,8 @@
 #include <QVariant>
 #include <QVector>
 
+#include "undo/undocommand.h"
+
 namespace olive {
 
 class Node;
@@ -285,6 +287,7 @@ public:
         || type == kVec2
         || type == kVec3
         || type == kVec4
+        || type == kBezier
         || type == kColor
         || type == kRational;
   }
