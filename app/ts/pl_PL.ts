@@ -1459,17 +1459,17 @@ Twoje projekty mogą zostać odzyskane z: %1</translation>
     <message>
         <location filename="../widget/curvewidget/curvewidget.cpp" line="66"/>
         <source>Linear</source>
-        <translation type="unfinished"></translation>
+        <translation>Liniowa</translation>
     </message>
     <message>
         <location filename="../widget/curvewidget/curvewidget.cpp" line="72"/>
         <source>Bezier</source>
-        <translation type="unfinished"></translation>
+        <translation>Beziera</translation>
     </message>
     <message>
         <location filename="../widget/curvewidget/curvewidget.cpp" line="78"/>
         <source>Hold</source>
-        <translation type="unfinished"></translation>
+        <translation>Skokowa</translation>
     </message>
 </context>
 <context>
@@ -2268,17 +2268,17 @@ Twoje projekty mogą zostać odzyskane z: %1</translation>
     <message>
         <location filename="../widget/slider/floatslider.cpp" line="73"/>
         <source>%1 dB</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../widget/slider/floatslider.cpp" line="76"/>
         <source>%1%</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../widget/slider/floatslider.cpp" line="117"/>
         <source>∞</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 <context>
@@ -2291,12 +2291,12 @@ Twoje projekty mogą zostać odzyskane z: %1</translation>
     <message>
         <location filename="../node/project/folder/folder.h" line="49"/>
         <source>Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Folder</translation>
     </message>
     <message>
         <location filename="../node/project/folder/folder.h" line="64"/>
         <source>Organize several items into a single collection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zorganizuj kilka elementów do jednej kolekcji.</translation>
     </message>
 </context>
 <context>
@@ -2516,17 +2516,17 @@ Twoje projekty mogą zostać odzyskane z: %1</translation>
     <message>
         <location filename="../dialog/export/codec/h264section.cpp" line="179"/>
         <source>Target Bit Rate (Mbps):</source>
-        <translation type="unfinished"></translation>
+        <translation>Docelowy bitrate (w Mbps):</translation>
     </message>
     <message>
         <location filename="../dialog/export/codec/h264section.cpp" line="187"/>
         <source>Maximum Bit Rate (Mbps):</source>
-        <translation type="unfinished"></translation>
+        <translation>Maksymalny bitrate (w Mbps):</translation>
     </message>
     <message>
         <location filename="../dialog/export/codec/h264section.cpp" line="195"/>
         <source>Two-Pass</source>
-        <translation type="unfinished"></translation>
+        <translation>Dwu-przebiegowy</translation>
     </message>
 </context>
 <context>
@@ -2652,17 +2652,19 @@ This setting is equivalent to the `preset` setting in libx264.</source>
     <message>
         <location filename="../widget/standardcombos/interlacedcombobox.h" line="38"/>
         <source>None (Progressive)</source>
-        <translation type="unfinished"></translation>
+        <translation>Żadne (Progresywne)</translation>
     </message>
     <message>
         <location filename="../widget/standardcombos/interlacedcombobox.h" line="39"/>
         <source>Top-Field First</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>I am not a video technician, I&apos;ll have to check this one</translatorcomment>
+        <translation type="unfinished">Najpierw góra</translation>
     </message>
     <message>
         <location filename="../widget/standardcombos/interlacedcombobox.h" line="40"/>
         <source>Bottom-Field First</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>I am not a video technician, I&apos;ll have to check this one</translatorcomment>
+        <translation type="unfinished">Najpierw dół</translation>
     </message>
 </context>
 <context>
@@ -3119,7 +3121,7 @@ This setting is equivalent to the `preset` setting in libx264.</source>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="695"/>
         <source>Sa&amp;ve All Projects</source>
-        <translation type="unfinished">Zapisz wszystkie projekty</translation>
+        <translation type="unfinished">&amp;Zapisz wszystkie projekty</translation>
     </message>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="696"/>
@@ -3245,7 +3247,7 @@ This setting is equivalent to the `preset` setting in libx264.</source>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="725"/>
         <source>&amp;View</source>
-        <translation type="unfinished">Widok</translation>
+        <translation type="unfinished">&amp;Widok</translation>
     </message>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="726"/>
@@ -3285,7 +3287,7 @@ This setting is equivalent to the `preset` setting in libx264.</source>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="737"/>
         <source>&amp;Playback</source>
-        <translation type="unfinished">Odtwarzanie</translation>
+        <translation type="unfinished">O&amp;dtwarzanie</translation>
     </message>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="738"/>
@@ -3380,7 +3382,7 @@ This setting is equivalent to the `preset` setting in libx264.</source>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="760"/>
         <source>&amp;Window</source>
-        <translation type="unfinished">Okno</translation>
+        <translation type="unfinished">&amp;Okno</translation>
     </message>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="761"/>
@@ -3400,7 +3402,7 @@ This setting is equivalent to the `preset` setting in libx264.</source>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="766"/>
         <source>&amp;Tools</source>
-        <translation type="unfinished">Narzędzia</translation>
+        <translation type="unfinished">&amp;Narzędzia</translation>
     </message>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="767"/>
@@ -3415,12 +3417,12 @@ This setting is equivalent to the `preset` setting in libx264.</source>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="769"/>
         <source>Ripple Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Ripple&quot;</translation>
     </message>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="770"/>
         <source>Rolling Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Rolling&quot;</translation>
     </message>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="771"/>
@@ -3430,12 +3432,12 @@ This setting is equivalent to the `preset` setting in libx264.</source>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="772"/>
         <source>Slip Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Slip&quot;</translation>
     </message>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="773"/>
         <source>Slide Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Przesuwanie&quot;</translation>
     </message>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="774"/>
@@ -3475,7 +3477,7 @@ This setting is equivalent to the `preset` setting in libx264.</source>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="783"/>
         <source>&amp;Help</source>
-        <translation type="unfinished">Pomoc</translation>
+        <translation type="unfinished">Pomo&amp;c</translation>
     </message>
     <message>
         <location filename="../window/mainwindow/mainmenu.cpp" line="784"/>
@@ -4244,17 +4246,17 @@ This driver is known to have stability and performance issues with Olive. It is 
     <message>
         <location filename="../widget/nodevaluetree/nodevaluetree.cpp" line="72"/>
         <source>Type</source>
-        <translation type="unfinished"></translation>
+        <translation>Typ</translation>
     </message>
     <message>
         <location filename="../widget/nodevaluetree/nodevaluetree.cpp" line="72"/>
         <source>Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Wartość</translation>
     </message>
     <message>
         <location filename="../widget/nodevaluetree/nodevaluetree.cpp" line="72"/>
         <source>Source</source>
-        <translation type="unfinished"></translation>
+        <translation>Źródło</translation>
     </message>
 </context>
 <context>
@@ -4406,20 +4408,20 @@ Please set the correct parameters on the sequences below (they have been set to 
     <message>
         <location filename="../node/effect/opacity/opacityeffect.cpp" line="34"/>
         <source>Texture</source>
-        <translation type="unfinished"></translation>
+        <translation>Tekstura</translation>
     </message>
     <message>
         <location filename="../node/effect/opacity/opacityeffect.cpp" line="35"/>
         <location filename="../node/effect/opacity/opacityeffect.h" line="19"/>
         <source>Opacity</source>
-        <translation type="unfinished"></translation>
+        <translation>Nieprzezroczysotść</translation>
     </message>
     <message>
         <location filename="../node/effect/opacity/opacityeffect.h" line="34"/>
         <source>Alter a video&apos;s opacity.
 
 This is equivalent to multiplying a video by a number between 0.0 and 1.0.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zmień nieprzezroczystość wideo. Oznacza to mnożenie tego wideo przez liczbę w przedziale od 0.0 do 1.0.</translation>
     </message>
 </context>
 <context>
@@ -4428,17 +4430,17 @@ This is equivalent to multiplying a video by a number between 0.0 and 1.0.</sour
         <location filename="../node/audio/pan/pan.cpp" line="47"/>
         <location filename="../node/audio/pan/pan.cpp" line="119"/>
         <source>Pan</source>
-        <translation type="unfinished"></translation>
+        <translation>Balans stereo</translation>
     </message>
     <message>
         <location filename="../node/audio/pan/pan.cpp" line="62"/>
         <source>Adjust the stereo panning of an audio source.</source>
-        <translation type="unfinished"></translation>
+        <translation>Dostosuj balans stereo źródła dźwięku.</translation>
     </message>
     <message>
         <location filename="../node/audio/pan/pan.cpp" line="118"/>
         <source>Samples</source>
-        <translation type="unfinished"></translation>
+        <translation>Sample</translation>
     </message>
 </context>
 <context>
@@ -4475,17 +4477,17 @@ This is equivalent to multiplying a video by a number between 0.0 and 1.0.</sour
     <message>
         <location filename="../widget/standardcombos/pixelaspectratiocombobox.h" line="92"/>
         <source>Set Custom Pixel Aspect Ratio</source>
-        <translation type="unfinished"></translation>
+        <translation>Ustaw własną proporcję pikseli</translation>
     </message>
     <message>
         <location filename="../widget/standardcombos/pixelaspectratiocombobox.h" line="108"/>
         <source>Custom...</source>
-        <translation type="unfinished"></translation>
+        <translation>Własna...</translation>
     </message>
     <message>
         <location filename="../widget/standardcombos/pixelaspectratiocombobox.h" line="115"/>
         <source>Custom (%1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Własna (%1)</translation>
     </message>
 </context>
 <context>
@@ -5168,17 +5170,17 @@ Are you sure you wish to delete this footage?</source>
     <message>
         <location filename="../panel/project/project.cpp" line="157"/>
         <source>Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Folder</translation>
     </message>
     <message>
         <location filename="../panel/project/project.cpp" line="159"/>
         <source>Project</source>
-        <translation type="unfinished"></translation>
+        <translation>Projekt</translation>
     </message>
     <message>
         <location filename="../panel/project/project.cpp" line="209"/>
         <source>(none)</source>
-        <translation type="unfinished"></translation>
+        <translation>(żaden)</translation>
     </message>
 </context>
 <context>
@@ -5744,17 +5746,17 @@ Are you sure you wish to delete this footage?</source>
     <message>
         <location filename="../node/generator/shape/shapenodebase.cpp" line="49"/>
         <source>Position</source>
-        <translation type="unfinished"></translation>
+        <translation>Pozycja</translation>
     </message>
     <message>
         <location filename="../node/generator/shape/shapenodebase.cpp" line="50"/>
         <source>Size</source>
-        <translation type="unfinished"></translation>
+        <translation>Rozmiar</translation>
     </message>
     <message>
         <location filename="../node/generator/shape/shapenodebase.cpp" line="51"/>
         <source>Color</source>
-        <translation type="unfinished"></translation>
+        <translation>Kolor</translation>
     </message>
 </context>
 <context>
@@ -5789,17 +5791,17 @@ Are you sure you wish to delete this footage?</source>
     <message>
         <location filename="../node/generator/solid/solid.cpp" line="42"/>
         <source>Solid</source>
-        <translation type="unfinished"></translation>
+        <translation>Jednolity kolor</translation>
     </message>
     <message>
         <location filename="../node/generator/solid/solid.cpp" line="57"/>
         <source>Generate a solid color.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wytwarza jednolity kolor.</translation>
     </message>
     <message>
         <location filename="../node/generator/solid/solid.cpp" line="62"/>
         <source>Color</source>
-        <translation type="unfinished"></translation>
+        <translation>Kolor</translation>
     </message>
 </context>
 <context>
@@ -5896,17 +5898,18 @@ Are you sure you wish to delete this footage?</source>
     <message>
         <location filename="../node/block/subtitle/subtitle.cpp" line="41"/>
         <source>Subtitle</source>
-        <translation type="unfinished"></translation>
+        <translation>Napisy</translation>
     </message>
     <message>
         <location filename="../node/block/subtitle/subtitle.cpp" line="51"/>
         <source>A time-based node representing a single subtitle element for a certain period of time.</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>makes no sense untile i understand how that works</translatorcomment>
+        <translation type="unfinished">Blok czasowy reprezentujący pojedyńczą część napisów w określonym czasie.</translation>
     </message>
     <message>
         <location filename="../node/block/subtitle/subtitle.cpp" line="58"/>
         <source>Text</source>
-        <translation type="unfinished"></translation>
+        <translation>Tekst</translation>
     </message>
 </context>
 <context>
@@ -5951,53 +5954,53 @@ Are you sure you wish to delete this footage?</source>
     <message>
         <location filename="../node/generator/text/text.cpp" line="48"/>
         <source>Sample Text</source>
-        <translation type="unfinished"></translation>
+        <translation>Przykładowy tekst</translation>
     </message>
     <message>
         <location filename="../node/generator/text/text.cpp" line="64"/>
         <location filename="../node/generator/text/text.cpp" line="86"/>
         <source>Text</source>
-        <translation type="unfinished"></translation>
+        <translation>Tekst</translation>
     </message>
     <message>
         <location filename="../node/generator/text/text.cpp" line="79"/>
         <source>Generate rich text.</source>
-        <translation type="unfinished"></translation>
+        <translation>Generuj tekst formatowany.</translation>
     </message>
     <message>
         <location filename="../node/generator/text/text.cpp" line="87"/>
         <source>Enable HTML</source>
-        <translation type="unfinished"></translation>
+        <translation>Włącz HTML</translation>
     </message>
     <message>
         <location filename="../node/generator/text/text.cpp" line="88"/>
         <source>Font</source>
-        <translation type="unfinished"></translation>
+        <translation>Czcionka</translation>
     </message>
     <message>
         <location filename="../node/generator/text/text.cpp" line="89"/>
         <source>Font Size</source>
-        <translation type="unfinished"></translation>
+        <translation>Rozmiar czcionki</translation>
     </message>
     <message>
         <location filename="../node/generator/text/text.cpp" line="90"/>
         <source>Vertical Align</source>
-        <translation type="unfinished"></translation>
+        <translation>Rozmieszczenie pionowe</translation>
     </message>
     <message>
         <location filename="../node/generator/text/text.cpp" line="91"/>
         <source>Top</source>
-        <translation type="unfinished"></translation>
+        <translation>Góra</translation>
     </message>
     <message>
         <location filename="../node/generator/text/text.cpp" line="91"/>
         <source>Center</source>
-        <translation type="unfinished"></translation>
+        <translation>Środek</translation>
     </message>
     <message>
         <location filename="../node/generator/text/text.cpp" line="91"/>
         <source>Bottom</source>
-        <translation type="unfinished"></translation>
+        <translation>Dół</translation>
     </message>
 </context>
 <context>
@@ -6147,17 +6150,17 @@ Duration: %3</source>
         <location filename="../widget/timelinewidget/timelinewidget.cpp" line="1024"/>
         <location filename="../widget/timelinewidget/timelinewidget.cpp" line="1045"/>
         <source>Properties</source>
-        <translation type="unfinished"></translation>
+        <translation>Proporcje</translation>
     </message>
     <message>
         <location filename="../widget/timelinewidget/timelinewidget.cpp" line="1030"/>
         <source>Use Audio Time Units</source>
-        <translation type="unfinished"></translation>
+        <translation>Użyj jednostek czasu audio</translation>
     </message>
     <message>
         <location filename="../widget/timelinewidget/timelinewidget.cpp" line="1035"/>
         <source>Show Waveforms</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokaż waveform</translation>
     </message>
 </context>
 <context>
@@ -6173,67 +6176,68 @@ Duration: %3</source>
     <message>
         <location filename="../widget/toolbar/toolbar.cpp" line="109"/>
         <source>Pointer Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Wskaźnik&quot;</translation>
     </message>
     <message>
         <location filename="../widget/toolbar/toolbar.cpp" line="110"/>
         <source>Edit Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Edytuj&quot;</translation>
     </message>
     <message>
         <location filename="../widget/toolbar/toolbar.cpp" line="111"/>
         <source>Ripple Tool</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>I can&apos;t find a good translation for this word, I am not sure if one even exists</translatorcomment>
+        <translation type="unfinished">Narzędzie &quot;Ripple&quot;</translation>
     </message>
     <message>
         <location filename="../widget/toolbar/toolbar.cpp" line="112"/>
         <source>Rolling Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Rolling&quot;</translation>
     </message>
     <message>
         <location filename="../widget/toolbar/toolbar.cpp" line="113"/>
         <source>Razor Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Żyletka&quot;</translation>
     </message>
     <message>
         <location filename="../widget/toolbar/toolbar.cpp" line="114"/>
         <source>Slip Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Slip&quot;</translation>
     </message>
     <message>
         <location filename="../widget/toolbar/toolbar.cpp" line="115"/>
         <source>Slide Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Przesuń&quot;</translation>
     </message>
     <message>
         <location filename="../widget/toolbar/toolbar.cpp" line="116"/>
         <source>Hand Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Rączka&quot;</translation>
     </message>
     <message>
         <location filename="../widget/toolbar/toolbar.cpp" line="117"/>
         <source>Zoom Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Zoom&quot;</translation>
     </message>
     <message>
         <location filename="../widget/toolbar/toolbar.cpp" line="118"/>
         <source>Transition Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Przejście&quot;</translation>
     </message>
     <message>
         <location filename="../widget/toolbar/toolbar.cpp" line="119"/>
         <source>Record Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Nagrywanie&quot;</translation>
     </message>
     <message>
         <location filename="../widget/toolbar/toolbar.cpp" line="120"/>
         <source>Add Tool</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Narzędzie &quot;Wstaw&quot;</translation>
     </message>
     <message>
         <location filename="../widget/toolbar/toolbar.cpp" line="121"/>
         <source>Toggle Snapping</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Przełącz przyciąganie</translation>
     </message>
 </context>
 <context>
@@ -6261,7 +6265,7 @@ Duration: %3</source>
     <message>
         <location filename="../node/output/track/track.cpp" line="99"/>
         <source>Node for representing and processing a single array of Blocks sorted by time. Also represents the end of a Sequence.</source>
-        <translation type="unfinished"></translation>
+        <translation>Blok reprezentujący pojedynczą tablicę bloków posortowaną wg. czasu. Przedstawia również zakończenie Sekwencji.</translation>
     </message>
     <message>
         <location filename="../node/output/track/track.cpp" line="282"/>
@@ -6590,21 +6594,22 @@ Do you wish to continue?</source>
     <message numerus="yes">
         <location filename="../widget/viewer/viewerdisplay.cpp" line="201"/>
         <source>%n skipped frame(s) detected during playback</source>
+        <translatorcomment>polish is funky when it comes to plurals 1 - pominięta 2-pominięte 5-pominiętych 21-pomniętych 22-pominięte.</translatorcomment>
         <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>Wykryto %n pominiętą klatkę podczas odtwarzania</numerusform>
+            <numerusform>Wykryto %n pominięte klatkę podczas odtwarzania</numerusform>
+            <numerusform>Wykryto %n pominiętych klatkę podczas odtwarzania</numerusform>
         </translation>
     </message>
     <message>
         <location filename="../widget/viewer/viewerdisplay.cpp" line="462"/>
         <source>%1 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 FPS</translation>
     </message>
     <message>
         <location filename="../widget/viewer/viewerdisplay.cpp" line="466"/>
         <source>%1 frames skipped</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Pominięto %1 klatek</translation>
     </message>
 </context>
 <context>
